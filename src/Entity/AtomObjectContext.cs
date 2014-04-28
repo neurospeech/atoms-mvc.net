@@ -432,41 +432,4 @@ namespace NeuroSpeech.Atoms.Entity
             return ObjectStateManager.GetObjectStateEntry(entity);
         }
     }
-
-    public class FastCloner {
-
-        static ThreadSafeDictionary<Type, Action<object, object>> Cache = new ThreadSafeDictionary<Type, Action<object, object>>();
-
-        internal static void Merge(object storeEntity, object entity)
-        {
-            Type t = entity.GetType();
-            Action<object,object> cloner = Cache.GetOrAdd(t, CreateCloner);
-            cloner(storeEntity, entity);
-        }
-
-        internal static Action<object, object> CreateCloner(Type t) {
-
-            List<Expression> statements = new List<Expression>();
-
-            ParameterExpression pLeft = Expression.Parameter(typeof(object));
-            ParameterExpression pRight = Expression.Parameter(typeof(object));
-
-            Expression left = Expression.Variable(t, "left");
-            Expression right = Expression.Variable(t,"right");
-
-            statements.Add( Expression.Assign(left, Expression.TypeAs(pLeft,t)));
-            statements.Add(Expression.Assign(right, Expression.TypeAs(pRight,t)));
-
-            foreach (var prop in t.GetProperties())
-            {
-                statements.Add(Expression.Assign(Expression.Property(left, prop), Expression.Property(right, prop)));
-            }
-
-            BlockExpression block = Expression.Block(statements.ToArray());
-
-            Expression<Action<object, object>> l = Expression.Lambda<Action<object, object>>(block, pLeft, pRight);
-
-            return l.Compile();
-        }
-    }
 }

@@ -1,4 +1,6 @@
 packages/*
-obj/*
-bin/*
+tests/obj/*
+tests/bin/*
+src/obj/*
+src/bin/*
 *.suo

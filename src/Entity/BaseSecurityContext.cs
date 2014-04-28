@@ -58,8 +58,9 @@ namespace NeuroSpeech.Atoms.Entity
             }
         }
 
-        protected EntityPropertyRulesCreator<T> CreateRule<T>()
-        where T : class
+        protected EntityPropertyRulesCreator<TContext,T> CreateRule<TContext,T>()
+            where TContext:ISecureRepository
+            where T : class
         {
             EntityPropertyRules r = null;
             Type type = typeof(T);
@@ -68,7 +69,7 @@ namespace NeuroSpeech.Atoms.Entity
                 r = BaseSecurityContext.DefaultEntityPropertyRules(type, IgnoreSecurity);
                 Rules[type] = r;
             }
-            return new EntityPropertyRulesCreator<T>(r);
+            return new EntityPropertyRulesCreator<TContext,T>(r);
         }
 
 
@@ -176,19 +177,12 @@ namespace NeuroSpeech.Atoms.Entity
             Rules.TryGetValue(type, out rule);
             if (rule == null)
             {
-                //if (type.BaseType != null && type.BaseType.IsClass)
-                //{
-                //    object retVal = GenericMethods.InvokeGeneric(this, "GetRule", new Type[] { type.BaseType }, r, db);
-                //    if (retVal != null)
-                //        return (Expression<Func<T, bool>>)retVal;
-                //}
-
                 if (IgnoreSecurity)
                     return x => true;
 
                 throw new EntityAccessException(type, "No rule found for type " + type.FullName, "");
             }
-            //Func<FilterContext, Expression<Func<T, bool>>> f = r(rule) as Func<FilterContext, Expression<Func<T, bool>>>;
+
             dynamic f = r(rule);
             if (f == null)
             {
@@ -196,7 +190,7 @@ namespace NeuroSpeech.Atoms.Entity
                     return x => true;
                 throw new EntityAccessException(type, "No rule found for type " + type.FullName, "");
             }
-            dynamic a = new FilterContext { Context = this, DB = db };
+            dynamic a = db;
             return f(a);
         }
 
@@ -290,6 +284,18 @@ namespace NeuroSpeech.Atoms.Entity
                 GenericMethods.InvokeGeneric(this, "VerifySourceEntity", type, db, entity, true);
             }
         }
+    }
+
+    public abstract class BaseSecurityContext<TContext> : BaseSecurityContext 
+        where TContext:ISecureRepository
+    {
+
+        protected EntityPropertyRulesCreator<TContext, T> CreateRule<T>()
+            where T:class
+        {
+            return base.CreateRule<TContext, T>();
+        }
+    
     }
 
 }

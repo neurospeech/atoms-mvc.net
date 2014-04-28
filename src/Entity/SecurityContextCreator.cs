@@ -15,8 +15,10 @@ using System.Xml.Serialization;
 
 namespace NeuroSpeech.Atoms.Entity
 {
-    public class EntityPropertyRulesCreator<T>
-    where T:class{
+    public class EntityPropertyRulesCreator<TContext,T>
+        where TContext:ISecureRepository
+        where T:class
+    {
 
         public EntityPropertyRules Rules { get; private set; }
 

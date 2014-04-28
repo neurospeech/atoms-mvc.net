@@ -16,6 +16,11 @@ using System.Collections.Concurrent;
 
 namespace NeuroSpeech.Atoms.Mvc
 {
+
+    /// <summary>
+    /// GenericMethods dynamically compiles and caches generic methods.
+    /// Because invoking generic methods with reflection requires more CPU time on validating and resolving parameters.
+    /// </summary>
     public class GenericMethods
     {
 

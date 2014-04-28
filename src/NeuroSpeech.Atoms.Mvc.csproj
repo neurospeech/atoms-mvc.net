@@ -97,9 +97,8 @@
     <Compile Include="Entity\EntityAtomsObjectContextHelper.cs" />
     <Compile Include="Entity\EntityPropertyRules.cs" />
     <Compile Include="Entity\ExpressionDictionary.cs" />
-    <Compile Include="Entity\FilterContext.cs" />
+    <Compile Include="Entity\FastCloner.cs" />
     <Compile Include="Entity\ISecureRepository.cs" />
-    <Compile Include="Entity\NavigationExpressionVisitor.cs" />
     <Compile Include="Entity\PropertyRuleDictionary.cs" />
     <Compile Include="Entity\SecurityContextCreator.cs" />
     <Compile Include="Entity\SerializeMode.cs" />
@@ -116,6 +115,7 @@
     <Compile Include="Mvc\JsonErrorResult.cs" />
     <Compile Include="Mvc\JsonExpression.cs" />
     <Compile Include="Mvc\LinqHelper.cs" />
+    <Compile Include="Mvc\LinqRuntimeTypeBuilder.cs" />
     <Compile Include="Mvc\NameHashProvider.cs" />
     <Compile Include="Mvc\ResponseFilterStream.cs" />
     <Compile Include="Mvc\TempFolderCache.cs" />
