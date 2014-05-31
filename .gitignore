@@ -1,4 +1,9 @@
 packages/*
-obj/*
-bin/*
+tests/obj/*
+tests/bin/*
+src/obj/*
+src/bin/*
+AtomsFramework/obj/*
+AtomsFramework/bin/*
+*.nupkg
 *.suo
