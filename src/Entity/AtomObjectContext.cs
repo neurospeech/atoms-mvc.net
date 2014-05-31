@@ -393,6 +393,10 @@ namespace NeuroSpeech.Atoms.Entity
 
         public void AddEntity<T>(T entity) where T : class {
             GetObjectSet<T>().AddObject(entity);
+            AtomEntity ae = entity as AtomEntity;
+            if (ae != null) {
+                ae.ObjectContext = this;
+            }
         }
 
         public void AddEntity(object entity) {
@@ -432,4 +436,5 @@ namespace NeuroSpeech.Atoms.Entity
             return ObjectStateManager.GetObjectStateEntry(entity);
         }
     }
+
 }

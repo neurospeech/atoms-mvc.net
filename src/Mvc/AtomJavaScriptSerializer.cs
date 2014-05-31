@@ -20,6 +20,57 @@ namespace System.Web.Mvc
 {
     public class AtomJavaScriptSerializer : IJavaScriptSerializer {
 
+
+        public static DateTime ToDateTime(string dt)
+        {
+
+            if (dt.StartsWith("/DateISO"))
+            {
+                int i = dt.IndexOf('(');
+                dt = dt.Substring(i + 1);
+                i = dt.LastIndexOf(')');
+                dt = dt.Substring(0, i);
+                var d = DateTime.Parse(dt, null, System.Globalization.DateTimeStyles.RoundtripKind);
+                return d;
+            }
+            dt = dt.Substring(6);
+            dt = dt.Substring(0, dt.Length - 2);
+            if (dt.StartsWith("-"))
+            {
+
+            }
+            int z = dt.LastIndexOfAny(new[] { '+', '-' });
+            if (z > 0)
+                dt = dt.Substring(0, dt.Length - z + 1);
+            //long ticks = long.Parse(dt) * 10000L + DatetimeMinTimeTicks;
+            //return new DateTime(ticks, DateTimeKind.Utc);
+
+            var date = new DateTime(1970, 1, 1);
+            date = date.AddMilliseconds(long.Parse(dt));
+            return date;
+        }
+
+
+        public static string ToJsonDateTime(DateTime val, bool json)
+        {
+            StringBuilder sb = new StringBuilder();
+            if (json)
+            {
+                sb.Append("\"\\/Date(");
+                sb.Append((val.Ticks - DatetimeMinTimeTicks) / 10000L);
+                sb.Append(")\\/\"");
+            }
+            else
+            {
+                sb.Append("new Date(");
+                sb.Append((val.Ticks - DatetimeMinTimeTicks) / 10000L);
+                sb.Append(")");
+            }
+            return sb.ToString();
+        }
+
+        public static readonly long DatetimeMinTimeTicks = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks;
+
     		private JavaScriptSerializer JS = new JavaScriptSerializer();
 
     		//List<object> tree = null;
@@ -45,7 +96,7 @@ namespace System.Web.Mvc
     			if (obj is DateTime)
     			{
     				DateTime val = (DateTime)obj;
-    				return WebAtomsMvcHelper.ToJsonDateTime(val, json);
+    				return ToJsonDateTime(val, json);
     			}
     			if (obj is bool)
     			{

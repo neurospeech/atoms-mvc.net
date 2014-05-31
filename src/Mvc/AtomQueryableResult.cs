@@ -337,10 +337,6 @@ namespace NeuroSpeech.Atoms.Mvc
                         Name = prop.Key,
                         Type = p.PropertyType
                     };
-                    if (prop.Value == SerializeMode.Calculate)
-                    {
-                        f.Protected = true;
-                    }
                     hideProperties.Add(f);
                     initList.Add(Expression.Property(fld.Expression, prop.Key));
                 }

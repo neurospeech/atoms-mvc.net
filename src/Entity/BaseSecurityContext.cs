@@ -18,6 +18,16 @@ using System.Xml.Serialization;
 namespace NeuroSpeech.Atoms.Entity
 {
 
+    public abstract class BaseSecurityContext<TC> : BaseSecurityContext
+    {
+        protected new EntityPropertyRulesCreator<T, TC> CreateRule<T>() 
+            where T:class
+        {
+            return CreateRule<T, TC>();
+        }
+    }
+
+
     /// <summary>
     /// Stores generic security context and a default implementation
     /// </summary>
@@ -58,18 +68,23 @@ namespace NeuroSpeech.Atoms.Entity
             }
         }
 
-        protected EntityPropertyRulesCreator<TContext,T> CreateRule<TContext,T>()
-            where TContext:ISecureRepository
+        protected EntityPropertyRulesCreator<T,object> CreateRule<T>()
             where T : class
+        {
+            return CreateRule<T, object>();
+        }
+
+        protected EntityPropertyRulesCreator<T, TC> CreateRule<T, TC>() 
+            where T:class
         {
             EntityPropertyRules r = null;
             Type type = typeof(T);
             if (!Rules.TryGetValue(type, out r))
             {
-                r = BaseSecurityContext.DefaultEntityPropertyRules(type, IgnoreSecurity);
+                r = DefaultEntityPropertyRules(type, IgnoreSecurity);
                 Rules[type] = r;
             }
-            return new EntityPropertyRulesCreator<TContext,T>(r);
+            return new EntityPropertyRulesCreator<T, TC>(r);
         }
 
 
@@ -177,12 +192,19 @@ namespace NeuroSpeech.Atoms.Entity
             Rules.TryGetValue(type, out rule);
             if (rule == null)
             {
+                //if (type.BaseType != null && type.BaseType.IsClass)
+                //{
+                //    object retVal = GenericMethods.InvokeGeneric(this, "GetRule", new Type[] { type.BaseType }, r, db);
+                //    if (retVal != null)
+                //        return (Expression<Func<T, bool>>)retVal;
+                //}
+
                 if (IgnoreSecurity)
                     return x => true;
 
                 throw new EntityAccessException(type, "No rule found for type " + type.FullName, "");
             }
-
+            //Func<FilterContext, Expression<Func<T, bool>>> f = r(rule) as Func<FilterContext, Expression<Func<T, bool>>>;
             dynamic f = r(rule);
             if (f == null)
             {
@@ -190,8 +212,9 @@ namespace NeuroSpeech.Atoms.Entity
                     return x => true;
                 throw new EntityAccessException(type, "No rule found for type " + type.FullName, "");
             }
-            dynamic a = db;
-            return f(a);
+            //dynamic a = new FilterContext { Context = this, DB = db };
+            dynamic ddb = db;
+            return f(ddb);
         }
 
         public void VerifyEntityModify<T>(T item, IEnumerable<string> modifiedProperties = null)
@@ -284,18 +307,6 @@ namespace NeuroSpeech.Atoms.Entity
                 GenericMethods.InvokeGeneric(this, "VerifySourceEntity", type, db, entity, true);
             }
         }
-    }
-
-    public abstract class BaseSecurityContext<TContext> : BaseSecurityContext 
-        where TContext:ISecureRepository
-    {
-
-        protected EntityPropertyRulesCreator<TContext, T> CreateRule<T>()
-            where T:class
-        {
-            return base.CreateRule<TContext, T>();
-        }
-    
     }
 
 }

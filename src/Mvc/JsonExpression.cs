@@ -132,7 +132,7 @@ namespace NeuroSpeech.Atoms.Linq
                     if (vt != null) {
                         if (vt == typeof(DateTime) && value.GetType() == typeof(string))
                         {
-                            ve = Expression.Constant( WebAtomsMvcHelper.ToDateTime(value as string), type );
+                            ve = Expression.Constant( AtomJavaScriptSerializer.ToDateTime(value as string), type );
                         }
                         else
                         {

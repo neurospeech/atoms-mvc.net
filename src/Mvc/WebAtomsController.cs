@@ -22,12 +22,12 @@ namespace NeuroSpeech.Atoms.Mvc
         ISecureRepository Repository { get; }
     }
 
-	public abstract class WebAtomsController<TOC> : Controller, ISecureRepositoryController
+	public abstract class AtomController<TOC> : Controller, ISecureRepositoryController
 		where TOC : ISecureRepository
 	{
 		public TOC ObjectContext { get; private set; }
 
-		public WebAtomsController()
+		public AtomController()
 		{
 			ObjectContext = Activator.CreateInstance<TOC>();
 
@@ -87,7 +87,7 @@ namespace NeuroSpeech.Atoms.Mvc
 
 				if (val.StartsWith("/Date(") && val.EndsWith(")/")) { 
 					// change date..
-					object date = WebAtomsMvcHelper.ToDateTime(val);
+					object date = AtomJavaScriptSerializer.ToDateTime(val);
 					data[item.Key] = date;
 				}
 			}
@@ -156,7 +156,7 @@ namespace NeuroSpeech.Atoms.Mvc
 						string dt = val.ToString();
 						if (dt.StartsWith("/Date"))
 						{
-							val = WebAtomsMvcHelper.ToDateTime(dt);
+							val = AtomJavaScriptSerializer.ToDateTime(dt);
 						}
 						else
 						{
@@ -208,7 +208,7 @@ namespace NeuroSpeech.Atoms.Mvc
         //}
 
 
-        protected virtual void LoadUserInformation(ActionExecutingContext filterContext)
+        protected virtual void LoadUserInformation(AuthorizationContext filterContext)
         {
 
         }
@@ -226,18 +226,26 @@ namespace NeuroSpeech.Atoms.Mvc
 
         }
 
+        protected override void OnAuthorization(AuthorizationContext filterContext)
+        {
+            base.OnAuthorization(filterContext);
+
+            var sc = CreateSecurityContext();
+            if (sc != null)
+            {
+                ObjectContext.SecurityContext = sc;
+            }
+
+            if (User.Identity.IsAuthenticated)
+            {
+                LoadUserInformation(filterContext);
+            }
+
+        }
 
 		protected override void OnActionExecuting(ActionExecutingContext filterContext)
 		{
 
-            var sc = CreateSecurityContext();
-            if (sc != null) {
-                ObjectContext.SecurityContext = sc;
-            }
-
-            if (User.Identity.IsAuthenticated) {
-                LoadUserInformation(filterContext);
-            }
 
 			base.OnActionExecuting(filterContext);
 

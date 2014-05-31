@@ -15,14 +15,13 @@ using System.Xml.Serialization;
 
 namespace NeuroSpeech.Atoms.Entity
 {
-    public class EntityPropertyRulesCreator<TContext,T>
-        where TContext:ISecureRepository
-        where T:class
+    public class EntityPropertyRulesCreator<T,TC>
+    where T:class
     {
 
         public EntityPropertyRules Rules { get; private set; }
 
-        public Func<object, Expression<Func<T, bool>>> NotSupportedRule {
+        public Func<TC, Expression<Func<T, bool>>> NotSupportedRule {
             get
             {
                 return y => { throw new EntityAccessException(typeof(T),"Operation Denied on Entity " + typeof(T).FullName ,"Not Supported Rule"); };
@@ -44,31 +43,31 @@ namespace NeuroSpeech.Atoms.Entity
             }
         }
 
-        public void SetFullControl(Func<object,Expression<Func<T, bool>>> rule)
+        public void SetFullControl(Func<TC,Expression<Func<T, bool>>> rule)
         {
             Rules.ReadRule = rule;
             Rules.WriteRule = rule;
             Rules.DeleteRule = rule;
         }
 
-        public void SetRead(Func<object, Expression<Func<T, bool>>> readRule) {
+        public void SetRead(Func<TC, Expression<Func<T, bool>>> readRule) {
             Set(readRule, null, false, null);
         }
 
-        public void SetWrite(Func<object, Expression<Func<T, bool>>> writeRule, bool alsoDelete = false )
+        public void SetWrite(Func<TC, Expression<Func<T, bool>>> writeRule, bool alsoDelete = false )
         {
             Set(null, writeRule, alsoDelete, null);
         }
 
-        public void SetDelete(Func<object, Expression<Func<T, bool>>> deleteRule)
+        public void SetDelete(Func<TC, Expression<Func<T, bool>>> deleteRule)
         {
             Set(null, null, false, deleteRule);
         }
 
         public void Set(
-            Func<object, Expression<Func<T, bool>>> readRule,
-            Func<object, Expression<Func<T, bool>>> writeRule = null,
-            bool useWriteForDelete = true, Func<object, Expression<Func<T, bool>>> deleteRule = null)
+            Func<TC, Expression<Func<T, bool>>> readRule,
+            Func<TC, Expression<Func<T, bool>>> writeRule = null,
+            bool useWriteForDelete = true, Func<TC, Expression<Func<T, bool>>> deleteRule = null)
         {
             if (useWriteForDelete)
             {
@@ -128,39 +127,4 @@ namespace NeuroSpeech.Atoms.Entity
 
 
     }
-
-    //public class SecurityContextCreator<TSC>
-    //    where TSC:BaseSecurityContext
-    //{
-
-        
-
-    //    private Dictionary<Type, EntityPropertyRules> sc = null;
-    //    private bool Admin = false;
-
-    //    internal SecurityContextCreator(Dictionary<Type, EntityPropertyRules> sc, bool admin)
-    //    {
-    //        this.sc = sc;
-    //        this.Admin = admin;
-    //    }
-
-    //    public EntityPropertyRulesCreator<TSC,T> CreateRule<T>()
-    //    {
-
-    //        EntityPropertyRules r = null;
-    //        Type type = typeof(T);
-    //        if (sc.TryGetValue(type, out r))
-    //            return new EntityPropertyRulesCreator<TSC,T>(r);
-    //        r = BaseSecurityContext.DefaultEntityPropertyRules(type, Admin);
-    //        sc[type] = r;
-    //        return new EntityPropertyRulesCreator<TSC,T>(r);
-    //    }
-
-
-
-    //    internal protected virtual void OnCreate()
-    //    {
-
-    //    }
-    //}
 }

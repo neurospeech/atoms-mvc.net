@@ -14,10 +14,6 @@ namespace NeuroSpeech.Atoms.Entity
         None,
         Default,
         Read,
-        ReadWrite,
-        /// <summary>
-        /// Used for calculating field value, retrieves data from Database but does not send to client
-        /// </summary>
-        Calculate
+        ReadWrite
     }
 }

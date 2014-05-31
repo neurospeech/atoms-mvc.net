@@ -16,7 +16,6 @@ namespace NeuroSpeech.Atoms.Entity
 {
     public class AtomEntity :
             EntityObject,
-            //IJavaScriptSerializable,
             IJavaScriptDeserializable,
             System.ComponentModel.ICustomTypeDescriptor
     {
@@ -67,7 +66,7 @@ namespace NeuroSpeech.Atoms.Entity
                         string dt = val.ToString();
                         if (dt.StartsWith("/Date"))
                         {
-                            val = WebAtomsMvcHelper.ToDateTime(dt);
+                            val = AtomJavaScriptSerializer.ToDateTime(dt);
                         }
                         else
                         {

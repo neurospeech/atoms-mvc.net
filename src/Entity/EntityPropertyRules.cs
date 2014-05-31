@@ -78,7 +78,6 @@ namespace NeuroSpeech.Atoms.Entity
                                 cache.Add(new AtomPropertyDescriptor(item, item.Name, true));
                                 break;
                             case SerializeMode.None:
-                            case SerializeMode.Calculate:
                                 cache.Add(new AtomPropertyDescriptor(item, item.Name, true, new XmlIgnoreAttribute(), new ScriptIgnoreAttribute()));
                                 break;
                             case SerializeMode.Default:

@@ -140,7 +140,7 @@ namespace NeuroSpeech.Atoms.Mvc
                 //    return DateTime.Parse(val, null, System.Globalization.DateTimeStyles.RoundtripKind);
                 //}
 				if(val.StartsWith("/Date"))
-					return WebAtomsMvcHelper.ToDateTime(val);
+					return AtomJavaScriptSerializer.ToDateTime(val);
 				return val;
 			}
 

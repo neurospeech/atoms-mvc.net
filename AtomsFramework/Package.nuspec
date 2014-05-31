@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>AtomsFramework</id>
+    <version>2.1.111</version>
+    <title>Atoms MVC Framework</title>
+    <authors>akash.kava</authors>
+    <owners></owners>
+    <description>
+      Atoms MVC Framework
+    </description>
+    <releaseNotes>
+    </releaseNotes>
+    <summary>
+      Atoms MVC Framework
+    </summary>
+    <language>en-US</language>
+    <projectUrl>https://github.com/neurospeech/atoms-mvc.net</projectUrl>
+    <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://github.com/neurospeech/atoms-mvc.net/blob/master/LICENSE</licenseUrl>
+    <copyright>Copyright  2014</copyright>
+    <dependencies>
+        <group targetFramework="net40">
+          <dependency id="EntityFramework" version="6.0" />
+        </group>
+    </dependencies>
+    <references></references>
+    <tags></tags>
+  </metadata>
+  <files>
+    <file src="..\src\bin\debug\NeuroSpeech.Atoms.Mvc.dll" target="lib" />
+    <file src="..\src\bin\debug\NeuroSpeech.Atoms.Mvc.pdb" target="lib" />
+    <file src="tools\" target="tools" />
+    <file src="content\" target="content" />
+  </files>
+</package>

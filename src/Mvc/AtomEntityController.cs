@@ -22,7 +22,7 @@ namespace NeuroSpeech.Atoms.Mvc
 
 
     [ValidateInput(false)]
-    public abstract class AtomEntityController<TOC> : WebAtomsController<TOC>
+    public abstract class AtomEntityController<TOC> : AtomController<TOC>
         where TOC : ISecureRepository
     {
 
