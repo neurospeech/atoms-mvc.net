@@ -6,4 +6,5 @@ src/bin/*
 AtomsFramework/obj/*
 AtomsFramework/bin/*
 *.nupkg
+*.nupkg.bak
 *.suo
