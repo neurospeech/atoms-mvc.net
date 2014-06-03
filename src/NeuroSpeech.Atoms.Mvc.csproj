@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\NeuroSpeech.Atoms.Mvc.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -109,6 +110,7 @@
     <Compile Include="Mvc\Atoms.cs" />
     <Compile Include="Mvc\CachedItem.cs" />
     <Compile Include="Mvc\CachedItemActionResult.cs" />
+    <Compile Include="Mvc\CachedRoute.cs" />
     <Compile Include="Mvc\GenericMethods.cs" />
     <Compile Include="Mvc\HtmlResources.cs" />
     <Compile Include="Mvc\JsonErrorResult.cs" />
