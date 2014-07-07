@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace NeuroSpeech.Atoms.Entity.Audit
@@ -19,5 +20,7 @@ namespace NeuroSpeech.Atoms.Entity.Audit
         void AddAudit(IAuditItem item);
 
         void SaveChanges();
+
+        Task<int> SaveChangesAsync();
     }
 }

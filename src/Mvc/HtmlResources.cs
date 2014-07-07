@@ -1,9 +1,13 @@
 ﻿using NeuroSpeech.Atoms.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
+using System.Web.Mvc;
+using System.Web.WebPages;
 
 namespace System.Web.Mvc {
     public static class HtmlResourcesHelper {
@@ -14,43 +18,76 @@ namespace System.Web.Mvc {
         /// <param name="helper"></param>
         /// <param name="resource"></param>
         public static void Register(this HtmlHelper helper, HtmlResource resource)
-        { 
-            var rs = helper.ViewContext.HttpContext.Items["HtmlResources"] as List<HtmlResource>;
-            if (rs == null) {
+        {
+            Register(helper.ViewContext.HttpContext, resource);
+        }
+
+        /// <summary>
+        /// Register resource to be rendered on this page
+        /// </summary>
+        /// <param name="helper"></param>
+        /// <param name="resource"></param>
+        public static void Register(this Controller controller, HtmlResource resource)
+        {
+            Register(controller.HttpContext, resource);
+        }
+
+        private static void Register(this HttpContextBase context, HtmlResource resource) {
+            var rs = context.Items["HtmlResources"] as List<HtmlResource>;
+            if (rs == null)
+            {
                 rs = new List<HtmlResource>();
-                helper.ViewContext.HttpContext.Items["HtmlResources"] = rs;
+                context.Items["HtmlResources"] = rs;
             }
 
             if (rs.Contains(resource))
                 return;
 
             rs.Add(resource);
+        }
 
+
+        /// <summary>
+        /// Render all registered resources, this must be used only inside a layout page or on the page without layout
+        /// </summary>
+        /// <param name="helper"></param>
+        public static HelperResult RenderResources<T>(this HtmlHelper<T> helper) {
+            return RenderResources((HtmlHelper)helper);
         }
 
         /// <summary>
         /// Render all registered resources, this must be used only inside a layout page or on the page without layout
         /// </summary>
         /// <param name="helper"></param>
-        public static void RenderResources(this HtmlHelper helper)
+        public static HelperResult RenderResources(this HtmlHelper helper)
         {
-            var rs = helper.ViewContext.HttpContext.Items["HtmlResources"] as List<HtmlResource>;
-            if (rs == null)
+
+            return new HelperResult(sw =>
             {
-                // nothing to render...
-                return;
-            }
 
-            List<HtmlResource> result = new List<HtmlResource>();
-            Build(rs,result);
+                var rs = helper.ViewContext.HttpContext.Items["HtmlResources"] as List<HtmlResource>;
+                if (rs == null)
+                {
+                    return;
+                }
 
-            foreach (var item in result)
-            {
-                helper.Raw(item.ToString() + "\r\n");
-            }
+                List<HtmlResource> result = new List<HtmlResource>();
+                Build(rs, result);
 
-            // remove all resources once rendered...
-            rs.Clear();
+                StringBuilder sb = new StringBuilder();
+
+                foreach (var item in result)
+                {
+                    //helper.Raw(item.ToString() + "\r\n");
+                    //sb.AppendLine(item.ToString());
+                    //sw.WriteLine(item.ToString());
+                    item.Render(sw, HtmlResource.Cached);
+                }
+
+                // remove all resources once rendered...
+                rs.Clear();
+
+            });
         }
 
         private static void Build(List<HtmlResource> src, List<HtmlResource> dest)
@@ -74,66 +111,147 @@ namespace NeuroSpeech.Atoms.Mvc
 
     public abstract class HtmlResource {
 
-        private static Dictionary<string, HtmlResource> Resources = new Dictionary<string, HtmlResource>();
 
-        private static T Create<T>(string name, string path, params HtmlResource[] dependencies)
+        public static bool Cached
+        {
+            get;
+            set;
+        }
+
+        private static List<HtmlResource> registeredResources = new List<HtmlResource>();
+
+        private static T Create<T>(string path, params HtmlResource[] dependencies)
             where T:HtmlResource
         {
-            lock (Resources) {
-                if (Resources.ContainsKey(name)) {
-                    throw new InvalidOperationException("Resource with name " + name + " already exists");
+            lock (registeredResources) {
+                if (registeredResources.Any( x=> string.Equals(x.Path, path, StringComparison.CurrentCultureIgnoreCase))) {
+                    throw new InvalidOperationException("Resource " + path + " is already registered");
                 }
                 var rs = Activator.CreateInstance<T>();
-                rs.Name = name;
                 rs.Path = path;
                 rs.Dependencies = new List<HtmlResource>();
                 if (dependencies != null && dependencies.Length > 0) {
                     rs.Dependencies.AddRange(dependencies);
                 }
-                Resources[name] = rs;
+                registeredResources.Add(rs);
                 return rs;
             }
 
         }
 
-        public static HtmlResource CreateScript(string name, string path, params HtmlResource[] dependencies)
+        /// <summary>
+        /// Creates Global Script Resource
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="path"></param>
+        /// <param name="dependencies"></param>
+        /// <returns></returns>
+        public static HtmlResource CreateScript(string path, params HtmlResource[] dependencies)
         {
-            return Create<HtmlScriptResource>(name, path, dependencies);
+            return Create<HtmlScriptResource>(path, dependencies);
         }
 
-        public static HtmlResource CreateStyleSheet(string name, string path, params HtmlResource[] dependencies)
+        /// <summary>
+        /// Creates Global Stylesheet Resource
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="path"></param>
+        /// <param name="dependencies"></param>
+        /// <returns></returns>
+        public static HtmlResource CreateStyleSheet(string path, params HtmlResource[] dependencies)
         {
-            return Create<HtmlStyleSheetResource>(name, path, dependencies);
+            return Create<HtmlStyleSheetResource>(path, dependencies);
         }
 
+        /// <summary>
+        /// Creates inline Script Resource, that will be rendered in the Header
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public static HtmlResource CreateInlineScript(string code) {
+            var s = new HtmlScriptResource();
+            s.Code = code;
+            return s;
+        }
 
-        protected HtmlResource()
+        /// <summary>
+        /// Creates JavaScript Variable with Provided name for Model
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public static HtmlResource CreateScriptModel(string name, object model) {
+            var s = new HtmlScriptResource();
+            AtomJavaScriptSerializer js = new AtomJavaScriptSerializer(null);
+            s.Code = "var " + name + " = " + js.Serialize(model) + ";";
+            return s;
+        }
+
+        /// <summary>
+        /// Creates inline Stylesheet Resource, that will be rendered in Header
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public static HtmlResource CreateStyle(string code)
+        {
+            var s = new HtmlStyleSheetResource();
+            s.Code = code;
+            return s;
+        }
+
+        internal protected HtmlResource()
         {
             Dependencies = new List<HtmlResource>();
         }
 
-        /// <summary>
-        /// Has to be a unique Name, probably same as NuGet Package
-        /// </summary>
-        internal string Name { get; set; }
-
         internal string Path { get; set; }
 
+        internal string Code { get; set; }
+
         internal List<HtmlResource> Dependencies { get;  set; }
+
+        internal abstract void Render(TextWriter sw, bool cached);
+        
     }
 
     internal class HtmlScriptResource : HtmlResource {
-        public override string ToString()
+
+        internal override void Render(TextWriter sw, bool cached)
         {
-            return string.Format("<script src='stylesheet' href='{0}' type='text/javascript'></script>", Path);
+            sw.WriteLine("<!-- Added by HtmlResource -->");
+            if (string.IsNullOrWhiteSpace(Code))
+            {
+                string src = Path;
+                if (cached) {
+                    src = CachedRoute.CachedUrl(src).ToHtmlString();
+                }
+                sw.WriteLine("<script src='{0}' type='text/javascript'></script>", src);
+                return;
+            }
+            sw.WriteLine("<script type='text/javascript'>\r\n\t{0}\r\n</script>\r\n", Code);
         }
     }
 
     internal class HtmlStyleSheetResource : HtmlResource {
-        public override string ToString()
+        internal override void Render(TextWriter sw, bool cached)
         {
-            return string.Format("<link rel='stylesheet' href='{0}'>",Path);
+            sw.WriteLine("<!-- Added by HtmlResource -->");
+            if (string.IsNullOrWhiteSpace(Code))
+            {
+                string src = Path;
+                if (cached) {
+                    src = CachedRoute.CachedUrl(src).ToHtmlString();
+                }
+                sw.WriteLine("<link rel='stylesheet' href='{0}'/>", src);
+                return;
+            }
+            sw.WriteLine("<style>\r\n{0}\r\n</style>\r\n", Code);
         }
+        //    if (string.IsNullOrWhiteSpace(Code))
+        //    {
+        //        return string.Format("<link rel='stylesheet' href='{0}'/>", Path);
+        //    }
+        //    return string.Format("<style>\r\n{0}\r\n</style>\r\n", Path);
+        //}
     }
 
 

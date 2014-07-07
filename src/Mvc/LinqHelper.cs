@@ -9,8 +9,9 @@ using System.Threading;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
 using NeuroSpeech.Atoms.Entity;
+using NeuroSpeech.Atoms.Linq;
 
-namespace NeuroSpeech.Atoms.Linq
+namespace System.Linq
 {
     public static class LinqHelper
     {

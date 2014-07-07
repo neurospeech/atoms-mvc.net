@@ -13,8 +13,9 @@ using System.Diagnostics;
 using System.Transactions;
 using NeuroSpeech.Atoms.Entity;
 using System.Collections.Concurrent;
-using System.Data.Entity.Core.Objects;
-using System.Data.Entity.Core.Objects.DataClasses;
+using System.Data.Entity;
+using System.Threading.Tasks;
+using NeuroSpeech.Atoms.Mvc.Entity;
 
 namespace NeuroSpeech.Atoms.Mvc
 {
@@ -26,31 +27,34 @@ namespace NeuroSpeech.Atoms.Mvc
         where TOC : ISecureRepository
     {
 
+        
 
-        public virtual ActionResult Parent(string table, string id, string property) {
-            Type entityType = GetType(ObjectContext, table);
-            PropertyInfo p = entityType.GetProperty(property);
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "ParentEntity", new Type[] { entityType,p.PropertyType }, p, id);
+        private TOC db {
+            get {
+                return this.Repository;
+            }
         }
 
-        public virtual ActionResult ParentEntity<T, TC>(PropertyInfo p, string id) 
+        public virtual async Task<ActionResult> Parent(string table, string id, string property) {
+            Type entityType = GetType(Repository, table);
+            PropertyInfo p = entityType.GetProperty(property);
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "ParentEntity", new Type[] { entityType,p.PropertyType }, p, id);
+        }
+
+        public virtual async Task<ActionResult> ParentEntity<T, TC>(PropertyInfo p, string id) 
             where T:class
             where TC:class
         {
-            return Invoke(db => {
-                var aq = Where<T>().WhereKey(id);
-                var tx = aq.Query.FirstOrDefault();
-                var pr = p.DeclaringType.GetProperty(p.Name + "Reference");
-                EntityReference<TC> end = pr.GetValue(tx, null) as EntityReference<TC>;
-                var eq = ObjectContext.ApplyFilter<TC>(end.CreateSourceQuery());
-                return JsonResult(eq.FirstOrDefault());
-            });
+            var aq = db.Query<T>().WhereKey(id);
+            var tx = await aq.FirstOrDefaultAsync();
+            var eq = db.ApplyFilter(db.NavigationQuery<TC>(tx,p.Name, false));
+            return JsonResult(await eq.FirstOrDefaultAsync());
         }
 
-        public virtual ActionResult Children(string table, string id, string property, string query, string orderBy, string fields, int start = 0, int size = -1) {
-            Type entityType = GetType(ObjectContext, table);
+        public virtual async Task<ActionResult> Children(string table, string id, string property, string query, string orderBy, string fields, int start = 0, int size = -1) {
+            Type entityType = GetType(Repository, table);
             PropertyInfo p = entityType.GetProperty(property);
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "ChildEntities", new Type[] { entityType, p.PropertyType.GetGenericArguments()[0]},
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "ChildEntities", new Type[] { entityType, p.PropertyType.GetGenericArguments()[0]},
                 p,
                 id,
                 query,
@@ -61,97 +65,119 @@ namespace NeuroSpeech.Atoms.Mvc
 
         }
 
-        public virtual ActionResult ChildEntities<T,CT>(PropertyInfo p, string id, string query, string orderBy, string fields, int start, int size) 
+        public virtual async Task<ActionResult> ChildEntities<T,CT>(PropertyInfo p, string id, string query, string orderBy, string fields, int start, int size) 
             where T:class 
             where CT:class
         {
-            return Invoke(db => {
-                var aq = Where<T>().WhereKey(id);
-                var tx = aq.Query.FirstOrDefault();
-                var r = ( EntityCollection<CT>)p.GetValue(tx, null);
-                var q = new AtomQueryableResult<CT>( ObjectContext.ApplyFilter<CT>( r.CreateSourceQuery()));
+            var aq = db.Query<T>().WhereKey(id);
+            var tx = await aq.FirstOrDefaultAsync();
+            var r = db.NavigationQuery<CT>(tx,p.Name, true);
+            var q = Repository.ApplyFilter<CT>(r);
 
-                q = q.Where(query);
+            q = q.WhereJsonQuery(query,db.SecurityContext);
+            long total = 0;
+            if (size != -1)
+            {
+                if (string.IsNullOrWhiteSpace(orderBy))
+                    return JsonError("orderBy missing");
+                q = q.OrderBy(orderBy);
+                total = await q.CountAsync();
+                q = q.Skip(start).Take(size);
+            }
+            else {
+                if (!string.IsNullOrWhiteSpace(orderBy))
+                    q = q.OrderBy(orderBy);
+            }
 
-                if (size != -1)
-                {
-                    if (string.IsNullOrWhiteSpace(orderBy))
-                        return JsonError("orderBy missing");
-                    q = q.OrderBy(orderBy).Page(start, size);
-                }
-                else {
-                    if (!string.IsNullOrWhiteSpace(orderBy))
-                        q = q.OrderBy(orderBy);
-                }
-                if (!string.IsNullOrWhiteSpace(fields)) {
-                    var d = PrepareFields<T>(fields);
-                    return q.Select(d);
-                }
-                return q;
-            });
+            IQueryable rq = q;
+
+            if (!string.IsNullOrWhiteSpace(fields)) {
+                var d = PrepareFields<T>(fields);
+                rq = q.SelectDynamic(d);
+            }
+            object result = await rq.ToListAsync();
+            if (size != -1) {
+                result = new { 
+                    items = result,
+                    total = total,
+                    merge = true
+                };
+            }
+            return JsonResult(result);
         }
 
-        public virtual ActionResult QueryEntity<T>(string query, string fields, string orderBy, int start, int size)
+        public virtual async Task<ActionResult> QueryEntity<T>(string query, string fields, string orderBy, int start, int size)
             where T : class
         {
-            return Invoke(db =>
+            string includeList = Request.QueryString["include"] ?? "";
+            if (!string.IsNullOrWhiteSpace(includeList))
             {
+                IQueryable<T> q = db.Query<T>().WhereJsonQuery(query,db.SecurityContext);
+                Type type = typeof(T);
 
-                string includeList = Request.QueryString["include"] ?? "";
-                if (!string.IsNullOrWhiteSpace(includeList))
+                var propList = includeList.Split(',').Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+
+                foreach (string inc in propList)
                 {
-                    ObjectQuery<T> q = (ObjectQuery<T>)Where<T>().Where(query).Query;
-                    Type type = typeof(T);
-
-                    var propList = includeList.Split(',').Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-
-                    foreach (var inc in propList)
-                    {
-                        q = q.Include(inc);
-                    }
-
-                    List<T> entites = q.ToList();
-
-                    Associations relEntities = new Associations();
-
-                    var f = relatedExpressions.GetOrAdd(type.FullName + ":" + includeList, key => CreateRelatedLoadExpression(type, propList));
-
-                    int i = 0;
-                    foreach (T entity in entites)
-                    {
-                        f(relEntities, i++, entity);
-                    }
-
-                    var model = new
-                    {
-                        items = entites,
-                        total = entites.Count,
-                        associations = relEntities
-                    };
-
-                    return JsonResult(model);
+                    q = q.Include(inc);
                 }
 
-                var aq = Where<T>().Where(query);
-                if (size != -1)
+                List<T> entites = await q.ToListAsync();
+
+                Associations relEntities = new Associations();
+
+                var f = relatedExpressions.GetOrAdd(type.FullName + ":" + includeList, key => CreateRelatedLoadExpression(type, propList));
+
+                int i = 0;
+                foreach (T entity in entites)
                 {
-                    if (string.IsNullOrWhiteSpace(orderBy))
-                        return JsonError("orderBy missing");
-                    aq = aq.OrderBy(orderBy).Page(start, size);
+                    f(relEntities, i++, entity);
                 }
-                else {
-                    if (!string.IsNullOrWhiteSpace(orderBy)) {
-                        aq = aq.OrderBy(orderBy);
-                    }
-                }
-                if (!string.IsNullOrWhiteSpace(fields))
-                {
-                    var d = PrepareFields<T>(fields);
 
-                    return aq.Select(d);
+                var model = new
+                {
+                    items = entites,
+                    total = entites.Count,
+                    associations = relEntities
+                };
+
+                return JsonResult(model);
+            }
+
+            long total = 0;
+
+            var aq = db.Query<T>().WhereJsonQuery(query,db.SecurityContext);
+            if (size != -1)
+            {
+                if (string.IsNullOrWhiteSpace(orderBy))
+                    return JsonError("orderBy missing");
+                aq = aq.OrderBy(orderBy);
+                total = await aq.CountAsync();
+                aq = aq.Skip(start).Take(size);
+            }
+            else {
+                if (!string.IsNullOrWhiteSpace(orderBy)) {
+                    aq = aq.OrderBy(orderBy);
                 }
-                return aq;
-            });
+            }
+
+            IQueryable rq = aq;
+
+            if (!string.IsNullOrWhiteSpace(fields))
+            {
+                var d = PrepareFields<T>(fields);
+                rq = aq.SelectDynamic(d);
+            }
+
+            object result = await rq.ToListAsync();
+            if (size != -1) {
+                result = new { 
+                    items = result,
+                    total = total,
+                    merge = true
+                };
+            }
+            return JsonResult(result);
         }
 
         private Dictionary<string, string> PrepareFields<T>(string fields) where T : class
@@ -162,10 +188,10 @@ namespace NeuroSpeech.Atoms.Mvc
 
             List<string> errors = new List<string>();
 
-            AtomObjectContext aoc = this.ObjectContext as AtomObjectContext;
-            if (aoc.SecurityContext != null && aoc.SecurityContext.IgnoreSecurity == false)
+            var sec = this.Repository.SecurityContext;
+            if (sec != null && sec.IgnoreSecurity == false)
             {
-                EntityPropertyRules pl = aoc.SecurityContext[entityType];
+                EntityPropertyRules pl = sec[entityType];
                 foreach (var item in d)
                 {
                     string field = string.IsNullOrWhiteSpace(item.Value) ? item.Key : item.Value;
@@ -180,81 +206,70 @@ namespace NeuroSpeech.Atoms.Mvc
             return d;
         }
 
-        public virtual ActionResult GetEntity<T>(string query, string fields, string orderBy)
+        public virtual async Task<ActionResult> GetEntity<T>(string query, string fields, string orderBy)
             where T : class
         {
-            return Invoke(db =>
+            var aq = db.Query<T>().WhereJsonQuery(query,db.SecurityContext);
+            if (!string.IsNullOrWhiteSpace(orderBy))
             {
-                var aq = Where<T>().Where(query);
-                if (!string.IsNullOrWhiteSpace(orderBy))
-                {
-                    aq = aq.OrderBy(orderBy);
-                }
-                if (!string.IsNullOrWhiteSpace(fields))
-                {
-                    var p = PrepareFields<T>(fields);
-                    return JsonResult(aq.Select(p).Query.FirstOrDefault());
-                }
-                return JsonResult(aq.Query.FirstOrDefault());
-            });
+                aq = aq.OrderBy(orderBy);
+            }
+            if (!string.IsNullOrWhiteSpace(fields))
+            {
+                var p = PrepareFields<T>(fields);
+                return JsonResult((await aq.SelectDynamic(p).ToListAsync()).FirstOrDefault());
+            }
+            return JsonResult(await aq.FirstOrDefaultAsync());
         }
 
-        public virtual ActionResult BulkDeleteEntity<T>() 
+        public virtual async Task<ActionResult> BulkDeleteEntity<T>() 
             where T:class
         {
-            return Invoke(db => {
-                string ids = FormValue<string>("ids");
-                if (string.IsNullOrWhiteSpace(ids))
-                    return JsonError("Invalid Request");
-                foreach (var key in ids.Split(',').Where(x => !string.IsNullOrWhiteSpace(x)))
-                {
-                    var item = Where<T>().WhereKey(key).Query.FirstOrDefault();
-                    InvokeMethod("OnDeleting", item);
-                    db.DeleteEntity(item);
-                    db.Save();
-                    InvokeMethod("OnDeleted", item);
-                }
-                return JsonResult("");
-            });
+            string ids = FormValue<string>("ids");
+            if (string.IsNullOrWhiteSpace(ids))
+                return JsonError("Invalid Request");
+            string query = "{ '$id:in':[" + ids + "]}";
+            var result = await db.Query<T>().WhereJsonQuery(query, db.SecurityContext).ToListAsync();
+
+            foreach (var e in result) {
+                db.DeleteEntity(e);
+            }
+            await db.SaveAsync();
+
+            return JsonResult("");            
         }
 
         
 
-        public virtual ActionResult DeleteEntity<T>()
+        public virtual async Task<ActionResult> DeleteEntity<T>()
             where T : class
         {
-            return Invoke(db =>
+            if (!Request.IsAjaxRequest())
             {
-                if (!Request.IsAjaxRequest())
+                if (!Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return JsonError("POST Method Required");
-                    }
+                    return JsonError("POST Method Required");
                 }
+            }
 
-                T item = Activator.CreateInstance<T>();
-                LoadModel(item);
+            T item = Activator.CreateInstance<T>();
+            LoadModel(item);
 
-                Type type = typeof(T);
+            Type type = typeof(T);
 
-                item = db.LoadEntity<T>(item);
-                if (item == null) {
-                    return JsonError("Failed to Load Entity. " + type.FullName);
-                }
-                InvokeMethod("OnDeleting", item);
+            item = await db.Query<T>().WhereCopy(item).FirstOrDefaultAsync();
+            if (item == null) {
+                return JsonError("Failed to Load Entity. " + type.FullName);
+            }
 
-                item = (T)db.DeleteEntity(item);
-                db.Save();
+            item = (T)db.DeleteEntity(item);
+            await db.SaveAsync();
 
-                InvokeMethod("OnDeleted", item);
-
-                T retItem = item;
-                return JsonResult(retItem);
-            });
+            T retItem = item;
+            return JsonResult(retItem);
         }
 
-        public virtual ActionResult MoveEntity<T>(
+        public virtual async Task<ActionResult> MoveEntity<T>(
             string query,
             string direction = "up",
             string orderBy = "SortOrder"
@@ -262,194 +277,167 @@ namespace NeuroSpeech.Atoms.Mvc
             where T : class
         {
 
-            return Invoke(db =>
+
+            if (!Request.IsAjaxRequest())
             {
-
-                if (!Request.IsAjaxRequest())
+                if (!Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return JsonError("POST Method Required");
-                    }
-                }
-
-
-                T item = Activator.CreateInstance<T>();
-                LoadModel(item);
-
-                var aq = Where<T>().Where(query);
-                if (string.IsNullOrWhiteSpace(orderBy))
-                {
-                    return JsonError("orderBy missing");
-                }
-                var list = aq.OrderBy(orderBy + " ASC").Query.ToList();
-
-
-                T srcItem = ObjectContext.LoadEntity(item);
-                
-                int index = list.IndexOf(srcItem);
-                list.Remove(srcItem);
-
-                bool up = string.IsNullOrWhiteSpace(direction) ? true : string.Equals(direction,"up", StringComparison.OrdinalIgnoreCase);
-
-                if (up)
-                {
-                    index = index - 1;
-                }
-                else
-                {
-                    index = index + 1;
-                }
-
-                list.Insert(index, srcItem);
-
-
-
-                int i = 1;
-
-                PropertyInfo p = typeof(T).GetProperty(orderBy);
-
-                foreach (var listItem in list)
-                {
-                    p.SetValue(listItem, i, null);
-                    i++;
-                }
-
-                ObjectContext.Save();
-
-                return JsonResult(srcItem);
-            });
-        }
-
-        public virtual ActionResult BulkSaveEntity<T>() 
-            where T:class
-        {
-            return Invoke(db => {
-
-                string ids = FormValue<string>("ids");
-
-                foreach (var key in ids.Split(',').Where(x=> !string.IsNullOrWhiteSpace(x)))
-                {
-                    var item = Where<T>().WhereKey(key).Query.FirstOrDefault();
-                    LoadModel(item);
-                    var entry = db.GetEntry(item);
-                    InvokeMethod("OnSaving", item, entry);
-                    db.Save();
-                    InvokeMethod("OnSaved", item);
-                }
-                return JsonResult("");
-            });
-        }
-
-        public virtual ActionResult SaveEntity<T>()
-            where T : class
-        {
-            return Invoke(db =>
-            {
-                if (!Request.IsAjaxRequest())
-                {
-                    if (!Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return JsonError("POST Method Required");
-                    }
-                }
-
-                Type type = typeof(T);
-
-                T item = Activator.CreateInstance<T>();
-
-                var key = type.GetEntityProperties(true).FirstOrDefault();
-
-                LoadModel(item);
-
-                // try to load data from context...
-
-                ObjectStateEntry entry = null;
-
-                T copy = ObjectContext.LoadEntity<T>(item);
-                if (copy != null)
-                {
-                    // merge...
-
-                    LoadModel(copy);
-
-                    entry = db.GetEntry(copy);
-
-                    InvokeMethod("OnSaving", copy, entry);
-
-                    db.Save();
-
-                    InvokeMethod("OnSaved", copy);
-
-                    item = copy;
-
-                }
-                else
-                {
-                    ObjectContext.ModifyEntity(item);
-
-                    AtomEntity ae = item as AtomEntity;
-                    ae.ObjectContext = this.ObjectContext;
-
-                    OnInserting<T>(item);
-
-                    InvokeMethod("OnInserting", item);
-                    db.Save();
-                    InvokeMethod("OnInserted", item);
-                }
-
-                return JsonResult(item);
-            });
-        }
-
-        protected virtual void OnInserting<T>(T item)
-        {
-            Type type = typeof(T);
-            foreach (PropertyInfo p in type.GetNavigationProperties()) { 
-                object val = null;
-                if (this.FormModel.TryGetValue(p.Name, out val))
-                {
-                    Type entityType = p.PropertyType.GetGenericArguments().FirstOrDefault();
-                    dynamic coll = p.GetValue(item,null);
-                    // should be an array...
-                    foreach (var child in (System.Collections.IEnumerable)val)
-                    {
-                        if (child == null)
-                            continue;
-                        object e = Activator.CreateInstance(entityType);
-
-                        object copy = ObjectContext.LoadEntity(e);
-                        if (copy == null)
-                            copy = e;
-                        LoadModel(copy, child as Dictionary<string, object>);
-
-                        coll.Add(copy);
-                    }
+                    return JsonError("POST Method Required");
                 }
             }
+
+
+            T item = Activator.CreateInstance<T>();
+            LoadModel(item);
+
+            var aq = db.Query<T>().WhereJsonQuery(query,db.SecurityContext);
+            if (string.IsNullOrWhiteSpace(orderBy))
+            {
+                return JsonError("orderBy missing");
+            }
+            var list = await aq.OrderBy(orderBy + " ASC").ToListAsync();
+
+
+            T srcItem = await db.Query<T>().WhereCopy(item).FirstOrDefaultAsync();
+                
+            int index = list.IndexOf(srcItem);
+            list.Remove(srcItem);
+
+            bool up = string.IsNullOrWhiteSpace(direction) ? true : string.Equals(direction,"up", StringComparison.OrdinalIgnoreCase);
+
+            if (up)
+            {
+                index = index - 1;
+            }
+            else
+            {
+                index = index + 1;
+            }
+
+            list.Insert(index, srcItem);
+
+
+
+            int i = 1;
+
+            PropertyInfo p = typeof(T).GetProperty(orderBy);
+
+            foreach (var listItem in list)
+            {
+                p.SetValue(listItem, i, null);
+                i++;
+            }
+
+            await Repository.SaveAsync();
+
+            return JsonResult(srcItem);
         }
+
+        public virtual async Task<ActionResult> BulkSaveEntity<T>() 
+            where T:class
+        {
+
+            string ids = FormValue<string>("ids");
+
+            string query = "{'$id:in':['" + ids + "']}";
+
+            var list = await db.Query<T>().WhereJsonQuery(query, db.SecurityContext).ToListAsync();
+            foreach (var item in list)
+            {
+                LoadModel(item);
+            }
+            await db.SaveAsync();
+            return JsonResult("");
+        }
+
+        public virtual async Task<ActionResult> SaveEntity<T>()
+            where T : class
+        {
+            if (!Request.IsAjaxRequest())
+            {
+                if (!Request.HttpMethod.Equals("POST", StringComparison.OrdinalIgnoreCase))
+                {
+                    return JsonError("POST Method Required");
+                }
+            }
+
+            Type type = typeof(T);
+
+            T item = Activator.CreateInstance<T>();
+
+            var key = type.GetEntityProperties(true).FirstOrDefault();
+
+            LoadModel(item);
+
+            T copy = await db.Query<T>().WhereCopy(item).FirstOrDefaultAsync();
+            if (copy != null)
+            {
+                // merge...
+
+                LoadModel(copy);
+                item = copy;
+
+            }
+            else
+            {
+                Repository.AddEntity(copy);
+
+
+            }
+
+            await db.SaveAsync();
+
+            return JsonResult(item);
+        }
+
+        //protected virtual void OnInserting<T>(T item)
+        //{
+        //    Type type = typeof(T);
+        //    foreach (PropertyInfo p in type.GetNavigationProperties()) { 
+        //        object val = null;
+        //        if (this.FormModel.TryGetValue(p.Name, out val))
+        //        {
+        //            Type entityType = p.PropertyType.GetGenericArguments().FirstOrDefault();
+        //            dynamic coll = p.GetValue(item,null);
+        //            // should be an array...
+        //            foreach (var child in (System.Collections.IEnumerable)val)
+        //            {
+        //                if (child == null)
+        //                    continue;
+        //                object e = Activator.CreateInstance(entityType);
+
+        //                object copy = ObjectContext.QuerySourceEntity(e).FirstOrDefault();
+        //                if (copy == null)
+        //                    copy = e;
+        //                LoadModel(copy, child as Dictionary<string, object>);
+
+        //                coll.Add(copy);
+        //            }
+        //        }
+        //    }
+        //}
 
         private static ThreadSafeDictionary<string, object> Methods = new ThreadSafeDictionary<string, object>();
 
-        protected void InvokeMethod<T>(string methodName, T item, ObjectStateEntry entry = null) {
-            Type type = typeof(T);
-            string key = type.FullName + ":" + methodName;
-            if (entry == null)
-            {
-                Action<object, T> action = (Action<object, T>)Methods.GetOrAdd(key, k => GetMethodSignature(methodName, type));
-                if (action != null)
-                {
-                    action(this,item);
-                }
-            }
-            else {
-                Action<object,T, ObjectStateEntry> action = (Action<object,T, ObjectStateEntry>)Methods.GetOrAdd(key, k => GetMethodSignature(methodName, type, typeof(ObjectStateEntry)));
-                if (action != null)
-                {
-                    action(this,item, entry);
-                }
-            }
-        }
+        //protected void InvokeMethod<T>(string methodName, T item, ObjectStateEntry entry = null) {
+        //    Type type = typeof(T);
+        //    string key = type.FullName + ":" + methodName;
+        //    if (entry == null)
+        //    {
+        //        Action<object, T> action = (Action<object, T>)Methods.GetOrAdd(key, k => GetMethodSignature(methodName, type));
+        //        if (action != null)
+        //        {
+        //            action(this,item);
+        //        }
+        //    }
+        //    else {
+        //        Action<object,T, ObjectStateEntry> action = (Action<object,T, ObjectStateEntry>)Methods.GetOrAdd(key, k => GetMethodSignature(methodName, type, typeof(ObjectStateEntry)));
+        //        if (action != null)
+        //        {
+        //            action(this,item, entry);
+        //        }
+        //    }
+        //}
 
         private object GetMethodSignature(string methodName, params Type[] types)
         {
@@ -470,56 +458,50 @@ namespace NeuroSpeech.Atoms.Mvc
             return Expression.Lambda(exp,plist).Compile();
         }
 
-        public ActionResult Query(string table, string query, string fields, string orderBy, int start = 0, int size = 10)
+        public async Task<ActionResult> Query(string table, string query, string fields, string orderBy, int start = 0, int size = 10)
         {
 
-            Type type = GetType(this.ObjectContext, table);
+            Type type = GetType(this.Repository, table);
 
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "QueryEntity", type, query, fields, orderBy, start, size);
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "QueryEntity", type, query, fields, orderBy, start, size);
+        }
 
-            //return (ActionResult)GetType().GetMethod("QueryEntity").MakeGenericMethod(type).Invoke(this, new object[] { query, fields, orderBy, start, size });
+        public async Task<ActionResult> Move(string table, string query, string orderBy, string direction)
+        {
+
+            Type type = GetType(this.Repository, table);
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "MoveEntity", type, query, direction, orderBy);
 
         }
 
-        public ActionResult Move(string table, string query, string orderBy, string direction)
+        public async Task<ActionResult> Get(string table, string query, string fields,string orderBy)
         {
+            Type type = GetType(this.Repository, table);
 
-            Type type = GetType(this.ObjectContext, table);
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "MoveEntity", type, query, direction, orderBy);
-
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "GetEntity", type, query, fields, orderBy);
         }
 
-        public ActionResult Get(string table, string query, string fields,string orderBy)
-        {
-            Type type = GetType(this.ObjectContext, table);
-
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "GetEntity", type, query, fields, orderBy);
+        public async Task<ActionResult> BulkSave(string table) {
+            Type type = GetType(this.Repository, table);
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "BulkSaveEntity", type);
         }
 
-        public ActionResult BulkSave(string table) {
-            Type type = GetType(this.ObjectContext, table);
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "BulkSaveEntity", type);
+        public async Task<ActionResult> Save(string table)
+        {
+            Type type = GetType(this.Repository, table);
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "SaveEntity", type);
         }
 
-        public ActionResult Save(string table)
+        public async Task<ActionResult> BulkDelete(string table)
         {
-            Type type = GetType(this.ObjectContext, table);
-            //return (ActionResult)GetType().GetMethod("SaveEntity").MakeGenericMethod(type).Invoke(this, new object[] { });
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "SaveEntity", type);
+            Type type = GetType(this.Repository, table);
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "BulkDeleteEntity", type);
         }
 
-        public ActionResult BulkDelete(string table)
+        public async Task<ActionResult> Delete(string table)
         {
-            Type type = GetType(this.ObjectContext, table);
-            //return (ActionResult)GetType().GetMethod("BulkDeleteEntity").MakeGenericMethod(type).Invoke(this, new object[] { });
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "BulkDeleteEntity", type);
-        }
-
-        public ActionResult Delete(string table)
-        {
-            Type type = GetType(this.ObjectContext, table);
-            //return (ActionResult)GetType().GetMethod("DeleteEntity").MakeGenericMethod(type).Invoke(this, new object[] { });
-            return (ActionResult)GenericMethods.InvokeGeneric(this, "DeleteEntity", type);
+            Type type = GetType(this.Repository, table);
+            return await (Task<ActionResult>)GenericMethods.InvokeGeneric(this, "DeleteEntity", type);
         }
 
         private static ThreadSafeDictionary<string, Type> typeCache = new ThreadSafeDictionary<string, Type>();
@@ -625,135 +607,97 @@ namespace NeuroSpeech.Atoms.Mvc
         private static ThreadSafeDictionary<string, Action<Associations, int, object>> relatedExpressions
             = new ThreadSafeDictionary<string, Action<Associations, int, object>>();
 
-        ///// <summary>
-        ///// Include Parent Properties...
-        ///// </summary>
-        ///// <typeparam name="T"></typeparam>
-        ///// <param name="query"></param>
-        ///// <param name="fields"></param>
-        ///// <param name="orderBy"></param>
-        ///// <returns></returns>
-        //public override ActionResult GetEntity<T>(string query, string fields, string orderBy)
-        //{
-        //    if (string.IsNullOrWhiteSpace(fields)) {
-        //        var q = Where<T>().Where(query);
-        //        Type type = typeof(T);
 
-        //        Dictionary<string,string> selector =
-        //            selectExpressions.GetOrAdd(type, t => {
-        //                Dictionary<string, string> fd = new Dictionary<string, string>();
-        //                foreach (var p in type.GetEntityProperties())
-        //                {
-        //                    fd[p.Name] = p.Name;
-        //                }
-        //                foreach (var p in type.GetProperties()
-        //                    .Where( x=>x.Name.EndsWith("Reference")
-        //                        && x.PropertyType.IsGenericType 
-        //                        && x.PropertyType.GetGenericTypeDefinition() == typeof(EntityReference<>) ))
-        //                {
-        //                    var np = type.GetProperties().FirstOrDefault(pr => pr.PropertyType == p.PropertyType.GetGenericArguments()[0]);
-        //                    fd[np.Name] = np.Name;
-        //                }
-
-        //                return fd;
-        //            });
-
-        //        return JsonResult( q.Select(selector).Query.FirstOrDefault());
-        //    }
-        //    return base.GetEntity<T>(query, fields, orderBy);
-        //}
-
-
-
+        [NonAction]
+        public IQueryable GetEntityQueryByKey<T>(object key)
+            where T:class
+        {
+            return db.Query<T>().WhereKey(key);
+        }
 
         [HttpPost]
-        public ActionResult SaveChanges()
+        public async Task<ActionResult> SaveChanges()
         {
-            return Invoke(db =>
+            ChangeSet model = new ChangeSet();
+            LoadModel(model);
+
+            List<object> changes = new List<object>();
+
+            foreach (Change entity in model.entities)
             {
-
-                ChangeSet model = new ChangeSet();
-                LoadModel(model);
-
-                List<object> changes = new List<object>();
-
-                foreach (Change entity in model.entities)
+                string entityType = entity.type;
+                Type clrType = GetType(Repository, entityType);
+                object dbEntity;
+                object id = entity.id;
+                if (id == null)
                 {
-                    string entityType = entity.type;
-                    Type clrType = GetType(ObjectContext, entityType);
-                    object dbEntity;
-                    object id = entity.id;
-                    dynamic os = GenericMethods.InvokeGeneric(ObjectContext, "GetObjectSet", clrType);
-                    if (id == null)
+                    dbEntity = Activator.CreateInstance(clrType);
+                    LoadModel(dbEntity, entity.changes);
+                    db.AddEntity(dbEntity);
+                    changes.Add(dbEntity);
+                }
+                else
+                {
+                    IQueryable qe = (IQueryable)GenericMethods.InvokeGeneric(this, "GetEntityQueryByKey", clrType, id);
+                    object final = (await qe.ToListAsync()).FirstOrDefault();
+                    if (final == null)
                     {
-                        dbEntity = Activator.CreateInstance(clrType);
-                        ((AtomEntity)dbEntity).ObjectContext = db;
-                        LoadModel(dbEntity, entity.changes);
-                        os.AddObject((dynamic)dbEntity);
-                        changes.Add(dbEntity);
+                        continue;
+                    }
+                    dbEntity = final;
+                    LoadModel(dbEntity, entity.changes);
+                    changes.Add(dbEntity);
+                }
+
+            }
+
+            foreach (Association association in model.associations)
+            {
+                int id = association.id;
+
+                object parent = changes[id];
+
+                Type parentType = parent.GetType();
+
+                foreach (var item in association.added)
+                {
+                    int cid = item.id;
+                    dynamic child = changes[cid];
+                    PropertyInfo p = parentType.GetProperty(item.name);
+                    System.Collections.IEnumerable list = p.GetValue(parent) as System.Collections.IEnumerable;
+                    if (list == null)
+                    {
+                        p.SetValue(parent, child);
                     }
                     else
                     {
-                        object final = ObjectContext.LoadEntityByKey(clrType, id);
-                        if (final == null)
-                        {
-                            continue;
-                        }
-                        dbEntity = final;
-                        LoadModel(dbEntity, entity.changes);
-                        changes.Add(dbEntity);
+                        ((dynamic)list).Add(child);
                     }
-
                 }
-
-                foreach (Association association in model.associations)
+                foreach (var item in association.removed)
                 {
-                    int id = association.id;
-
-                    object parent = changes[id];
-
-                    Type parentType = parent.GetType();
-
-                    foreach (var item in association.added)
+                    int cid = item.id;
+                    dynamic child = changes[cid];
+                    PropertyInfo p = parentType.GetProperty(item.name);
+                    dynamic d = p.GetValue(parent);
+                    d.Load();
+                    d.Remove(child);
+                    var da = p.GetCustomAttribute<DeleteEntityOnRemoveAttribute>(false);
+                    if (da != null)
                     {
-                        int cid = item.id;
-                        dynamic child = changes[cid];
-                        PropertyInfo p = parentType.GetProperty(item.name);
-                        System.Collections.IEnumerable list = p.GetValue(parent) as System.Collections.IEnumerable;
-                        if (list == null)
-                        {
-                            p.SetValue(parent, child);
-                        }
-                        else
-                        {
-                            ((dynamic)list).Add(child);
-                        }
-                    }
-                    foreach (var item in association.removed)
-                    {
-                        int cid = item.id;
-                        dynamic child = changes[cid];
-                        PropertyInfo p = parentType.GetProperty(item.name);
-                        dynamic d = p.GetValue(parent);
-                        d.Load();
-                        d.Remove(child);
-                        var da = p.GetCustomAttribute<DeleteEntityOnRemoveAttribute>(false);
-                        if (da != null)
-                        {
-                            object co = child;
-                            Type t = co.GetType();
-                            dynamic os = GenericMethods.InvokeGeneric(ObjectContext, "GetObjectSet", t);
-                            os.DeleteObject(child);
-                        }
+                        object co = child;
+                        Type t = co.GetType();
+                        dynamic os = GenericMethods.InvokeGeneric(Repository, "GetObjectSet", t);
+                        os.DeleteObject(child);
                     }
                 }
+            }
 
 
 
-                db.Save();
+            await db.SaveAsync();
 
-                return JsonResult(changes);
-            });
+            return JsonResult(changes);
         }
 
 

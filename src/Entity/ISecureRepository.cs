@@ -7,17 +7,20 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace NeuroSpeech.Atoms.Entity
 {
     public interface ISecureRepository : IDisposable
     {
-        /// <summary>
-        /// Retrieves ObjectStateEntry from underlying context
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        ObjectStateEntry GetEntry(object entity);
+        ///// <summary>
+        ///// Retrieves ObjectStateEntry from underlying context
+        ///// </summary>
+        ///// <param name="entity"></param>
+        ///// <returns></returns>
+        //ObjectStateEntry GetEntry(object entity);
+
+
 
         BaseSecurityContext SecurityContext { get; set; }
 
@@ -47,33 +50,19 @@ namespace NeuroSpeech.Atoms.Entity
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        IQueryable Query(Type t);
-        /// <summary>
-        /// Loads original Entity from Database by given key
-        /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="key"></param>
+        /// <param name="entity"></param>
+        /// <param name="property"></param>
         /// <returns></returns>
-        IQueryable<T> QueryByKey<T>(object key) where T : class;
+        IQueryable<T> NavigationQuery<T>(object entity, string property, bool collection) where T:class;
 
-        /// <summary>
-        /// Loads original Entity from Database by using
-        /// Primary Key Properties in keyObject
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="keyObject"></param>
-        /// <returns></returns>
-        T LoadEntity<T>(T keyObject) where T:class;
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="t"></param>
+        ///// <returns></returns>
+        //IQueryable Query(Type t);
 
-
-        /// <summary>
-        /// Loads original Entity from Database by using given primary key
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        object LoadEntityByKey(Type type,object key);
 
         /// <summary>
         /// Adds entity to repository
@@ -81,12 +70,12 @@ namespace NeuroSpeech.Atoms.Entity
         /// <param name="entity"></param>
         void AddEntity(object entity);
 
-        /// <summary>
-        /// Adds or Updates given Entity to Entity Set, based on type, EntitySet or DbSet will be
-        /// determined at runtime
-        /// </summary>
-        /// <param name="entity"></param>
-        object ModifyEntity(object entity);
+        ///// <summary>
+        ///// Adds or Updates given Entity to Entity Set, based on type, EntitySet or DbSet will be
+        ///// determined at runtime
+        ///// </summary>
+        ///// <param name="entity"></param>
+        //object ModifyEntity(object entity);
 
         /// <summary>
         /// Deletes object from database
@@ -100,6 +89,13 @@ namespace NeuroSpeech.Atoms.Entity
         /// </summary>
         /// <returns></returns>
         int Save();
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        Task<int> SaveAsync();
 
     }
 }

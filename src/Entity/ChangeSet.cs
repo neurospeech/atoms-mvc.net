@@ -14,6 +14,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Xml.Serialization;
 
@@ -21,11 +22,52 @@ namespace NeuroSpeech.Atoms.Entity
 {
     public class ChangeSet
     {
-        public IEnumerable<ObjectStateEntry> Added { get; private set; }
-        public IEnumerable<ObjectStateEntry> Modified { get; private set; }
-        public IEnumerable<ObjectStateEntry> Deleted { get; private set; }
 
-        public IEnumerable<ObjectStateEntry> UpdatedEntities
+        public class ChangeEntry {
+
+            public ChangeEntry(ObjectStateEntry f)
+            {
+                Entity = f.Entity;
+                State = f.State;
+                if (State != EntityState.Modified)
+                    return;
+                
+                var d = new Dictionary<string, object>();
+                foreach (var item in f.GetModifiedProperties())
+                {
+                    d[item] = f.OriginalValues[item];
+                }
+                OriginalValues = d;
+                
+            }
+
+            public ChangeEntry(System.Data.Entity.Infrastructure.DbEntityEntry f)
+            {
+                Entity = f.Entity;
+                State = f.State;
+                if (State != EntityState.Modified)
+                    return;
+
+                var d = new Dictionary<string, object>();
+                foreach (var item in f.OriginalValues.PropertyNames)
+                {
+                    var fp = f.Property(item);
+                    if (!fp.IsModified)
+                        continue;
+                    d[item] = fp.CurrentValue;
+                }
+            }
+
+            public object Entity { get; set; }
+            public EntityState State { get; set; }
+            public Dictionary<string,object> OriginalValues { get; set; }
+        }
+
+        public IEnumerable<ChangeEntry> Added { get; private set; }
+        public IEnumerable<ChangeEntry> Modified { get; private set; }
+        public IEnumerable<ChangeEntry> Deleted { get; private set; }
+
+        public IEnumerable<ChangeEntry> UpdatedEntities
         {
             get
             {
@@ -42,10 +84,17 @@ namespace NeuroSpeech.Atoms.Entity
 
         public ChangeSet(ObjectContext oc)
         {
-            Added = oc.ObjectStateManager.GetObjectStateEntries(EntityState.Added).ToList();
-            Deleted = oc.ObjectStateManager.GetObjectStateEntries(EntityState.Deleted).ToList();
-            Modified = oc.ObjectStateManager.GetObjectStateEntries(EntityState.Modified).ToList();
+            Added = oc.ObjectStateManager.GetObjectStateEntries(EntityState.Added).Select(f=> new ChangeEntry(f)).ToList();
+            Deleted = oc.ObjectStateManager.GetObjectStateEntries(EntityState.Deleted).Select(f => new ChangeEntry(f)).ToList();
+            Modified = oc.ObjectStateManager.GetObjectStateEntries(EntityState.Modified).Select(f => new ChangeEntry(f)).ToList();
 
+        }
+
+        public ChangeSet(DbContext dc)
+        {
+            Added = dc.ChangeTracker.Entries().Where(x=>x.State == EntityState.Added).Select(f=> new ChangeEntry(f)).ToList();
+            Deleted = dc.ChangeTracker.Entries().Where(x => x.State == EntityState.Deleted).Select(f => new ChangeEntry(f)).ToList();
+            Modified = dc.ChangeTracker.Entries().Where(x => x.State == EntityState.Modified).Select(f => new ChangeEntry(f)).ToList();
         }
 
         public void BeginAudit()
@@ -54,17 +103,17 @@ namespace NeuroSpeech.Atoms.Entity
             // add everything what was added first...
             foreach (var item in Added)
             {
-                var c = new Change(item.Entity, item.State);
+                var c = new Change(item.Entity, item.State,null);
                 Changes.Add(c);
             }
             foreach (var item in Modified)
             {
-                var c = new Change(item.Entity, item.State, item.OriginalValues, item.GetModifiedProperties());
+                var c = new Change(item.Entity, item.State, item.OriginalValues);
                 Changes.Add(c);
             }
             foreach (var item in Deleted)
             {
-                var c = new Change(item.Entity, item.State);
+                var c = new Change(item.Entity, item.State,null);
                 Changes.Add(c);
             }
         }
@@ -75,7 +124,21 @@ namespace NeuroSpeech.Atoms.Entity
 
         internal void EndAudit(IAuditContext ac)
         {
-            foreach (var item in Changes.Where(x=> x.State == EntityState.Added))
+            PrepareChanges(ac);
+
+            ac.SaveChanges();
+        }
+
+        internal async Task<int> EndAuditAsync(IAuditContext ac)
+        {
+            PrepareChanges(ac);
+
+            return await ac.SaveChangesAsync();
+        }
+
+        private void PrepareChanges(IAuditContext ac)
+        {
+            foreach (var item in Changes.Where(x => x.State == EntityState.Added))
             {
                 Type type = item.Entity.GetType();
                 List<string> keyValues = new List<string>();
@@ -84,7 +147,8 @@ namespace NeuroSpeech.Atoms.Entity
                     var key = k.GetValue(item.Entity);
 
                     var pv = item.Values.FirstOrDefault(x => x.Name == k.Name);
-                    if (pv == null) {
+                    if (pv == null)
+                    {
                         pv = new CFieldValue { Name = k.Name };
                         item.Values.Add(pv);
                     }
@@ -119,10 +183,10 @@ namespace NeuroSpeech.Atoms.Entity
                 }
             }
 
-            foreach (var item in links.GroupBy(x=>x.ObjectName))
+            foreach (var item in links.GroupBy(x => x.ObjectName))
             {
                 string name = item.Key;
-                foreach (var k in item.GroupBy(x=>x.Key).ToList())
+                foreach (var k in item.GroupBy(x => x.Key).ToList())
                 {
                     string key = k.Key;
                     Change c = Changes.FirstOrDefault(x => x.ObjectName == name && x.Key == key);
@@ -130,7 +194,8 @@ namespace NeuroSpeech.Atoms.Entity
                     {
                         c.Links.AddRange(k);
                     }
-                    else {
+                    else
+                    {
                         c = new Change(EntityState.Modified);
                         c.ObjectName = name;
                         c.Key = key;
@@ -145,7 +210,7 @@ namespace NeuroSpeech.Atoms.Entity
 
             foreach (var change in Changes)
             {
-                if(change.Entity is IAuditIgnore)
+                if (change.Entity is IAuditIgnore)
                     continue;
                 IAuditItem item = ac.CreateNew();
                 item.Action = change.State.ToString();
@@ -158,8 +223,6 @@ namespace NeuroSpeech.Atoms.Entity
                 item.Links = sr.Serialize(change.Links);
                 ac.AddAudit(item);
             }
-
-            ac.SaveChanges();
         }
     }
 
@@ -185,7 +248,7 @@ namespace NeuroSpeech.Atoms.Entity
         }
 
 
-        public Change(object entity, EntityState state , DbDataRecord originalValues = null, IEnumerable<string> modifiedProperties = null)
+        public Change(object entity, EntityState state , Dictionary<string,object> originalValues)
         {
             this.Entity = entity;
 
@@ -218,11 +281,11 @@ namespace NeuroSpeech.Atoms.Entity
                     pv.NewValue = p.GetValue(entity);
                 }
                 else {
-                    pv.OldValue = p.GetValue(entity);
+                    pv.NewValue = p.GetValue(entity);
                     if (originalValues != null) {
-                        if (modifiedProperties.Any(x => p.Name == x))
+                        if (originalValues.ContainsKey(p.Name))
                         {
-                            pv.NewValue = originalValues[p.Name];
+                            pv.OldValue = originalValues[p.Name];
                         }
                         else {
                             continue;

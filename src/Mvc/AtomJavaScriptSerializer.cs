@@ -15,6 +15,7 @@ using NeuroSpeech.Atoms.Linq;
 using NeuroSpeech.Atoms;
 using System.Linq.Expressions;
 using System.Data.Entity.Core.Objects.DataClasses;
+using NeuroSpeech.Atoms.Mvc.Entity;
 
 namespace System.Web.Mvc
 {
@@ -76,13 +77,12 @@ namespace System.Web.Mvc
     		//List<object> tree = null;
     		bool json = true;
 
-            private BaseSecurityContext SecurityContext = null;
-
-            public AtomJavaScriptSerializer(BaseSecurityContext bsc, bool json = true)
+            private BaseSecurityContext SecurityContext;
+            
+            public AtomJavaScriptSerializer(BaseSecurityContext sc, bool json = true)
     		{
     			this.json = json;
-    			//tree = new List<object>();
-                this.SecurityContext = bsc;
+                this.SecurityContext = sc;
     		}
 
     		public string Serialize(object obj)
@@ -136,38 +136,40 @@ namespace System.Web.Mvc
                 //    return JS.Serialize(obj);
 
     			StringBuilder sb = new StringBuilder();
-    			Type et = typeof(EntityObject);
 
-                IEnumerable plist = TypeDescriptor.GetProperties(obj);
+                
 
-                if (obj is IEntityWrapper && SecurityContext != null) {
-                    plist = (SecurityContext[obj.GetType().BaseType]).GetProperties(obj);
+                Type type = obj.GetType();
+
+                IEnumerable<KeyValuePair<string,object>> propertyValues = null;
+
+                IRepositoryObject iro = obj as IRepositoryObject;
+                if (iro != null) {
+                    type = iro.ObjectType;
+                    if (SecurityContext != null) {
+                        var security = SecurityContext[type];
+                        propertyValues = GetPropertyValues(type, obj, security.PublicProperties);
+                    }
                 }
 
-    			foreach (PropertyDescriptor pd in plist)
+
+                if (propertyValues == null) {
+                    propertyValues = GetPropertyValues(type, obj);
+                }
+
+    			foreach (var pd in propertyValues)
     			{
-                    if (pd.Attributes.OfType<XmlIgnoreAttribute>().Any())
-                        continue;
-                    if (pd.Attributes.OfType<ScriptIgnoreAttribute>().Any())
-                        continue;
 
-                    // ignore entity object properties like EntityKey EntityState etc..
-                    if (pd.PropertyType.DeclaringType == et)
-                        continue;
-
-    				object value = GenericMethods.GetProperty(obj,pd);
-                    //object value = pd.GetValue(obj);
-                    //if (value != null && tree.Contains(value))
-                    //    continue;
+                    object value = pd.Value;
     				if (json)
     				{
     					sb.Append('"');
-    					sb.Append(pd.Name);
+    					sb.Append(pd.Key);
     					sb.Append('"');
     				}
     				else
     				{
-    					sb.Append(pd.Name);
+    					sb.Append(pd.Key);
     				}
     				sb.Append(":");
     				string jv = this.Serialize(value);
@@ -178,6 +180,24 @@ namespace System.Web.Mvc
     				sb = sb.Remove(sb.Length - 1, 1);
     			return "{" + sb.ToString() + "}";
     		}
+
+
+            
+
+            private IEnumerable<KeyValuePair<string, object>> GetPropertyValues(Type type, object obj, IEnumerable<string> filter = null)
+            {
+                IEnumerable<PropertyInfo> plist = type.GetProperties();
+                if (filter != null) {
+                    plist = plist.Where(x => filter.Contains(x.Name));
+                }
+
+                foreach (var item in plist)
+                {
+                    yield return new KeyValuePair<string,object>( item.Name, GenericMethods.GetProperty(obj,item) );
+                }
+
+
+            }
 
     		private string QuotedString(string p)
     		{
