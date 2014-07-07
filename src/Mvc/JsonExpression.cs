@@ -76,7 +76,7 @@ namespace NeuroSpeech.Atoms.Linq
 
         private Expression ParseLinq(Expression root, Type type, string key, object value)
         {
-            string[] tokens = key.Split(':').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).ToArray();
+            string[] tokens = key.Split(':', ' ').Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim()).ToArray();
 
             string field = tokens[0];
 

@@ -1,4 +1,4 @@
-﻿using NeuroSpeech.WebAtoms.Entity.Audit;
+﻿using NeuroSpeech.Atoms.Entity.Audit;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 
-namespace NeuroSpeech.WebAtoms.Entity
+namespace NeuroSpeech.Atoms.Entity
 {
     public class NavigationExpressionVisitor : ExpressionVisitor
     {

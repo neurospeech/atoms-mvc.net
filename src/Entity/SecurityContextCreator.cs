@@ -89,7 +89,7 @@ namespace NeuroSpeech.Atoms.Entity
 
         private void SetProperty(string property, SerializeMode mode)
         {
-            Rules[property] = mode;
+            Rules.SetMode(property,mode);
         }
 
         public void SetProperty(SerializeMode mode, params Expression<Func<T, object>>[] plist)

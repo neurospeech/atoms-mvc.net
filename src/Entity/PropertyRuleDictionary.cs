@@ -20,30 +20,14 @@ namespace NeuroSpeech.Atoms.Entity
         {
             get
             {
-                EntityPropertyRules list = null;
-                lock (this)
-                {
-                    if (!Rules.TryGetValue(type.FullName, out list))
-                    {
-                        list = new EntityPropertyRules(type.Name, type.FullName);
-                        // load only primary key rules...
-                        foreach (var item in type.GetEntityProperties(true))
-                        {
-                            // only send...
-                            list[item.Name] = SerializeMode.Read;
-                        }
-
-                        Rules[type.FullName] = list;
-                    }
-                }
-                return list;
+                return Rules[type.Name];
             }
         }
 
         public void Set<T>(string property, SerializeMode mode)
         {
             EntityPropertyRules modes = this[typeof(T)];
-            modes[property] = mode;
+            modes.SetMode(property,mode);
         }
 
         public void Set<T>(Expression<Func<T, object>> exp, SerializeMode mode)

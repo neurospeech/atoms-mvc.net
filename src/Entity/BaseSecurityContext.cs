@@ -1,5 +1,6 @@
 using NeuroSpeech.Atoms.Entity.Audit;
 using NeuroSpeech.Atoms.Mvc;
+using NeuroSpeech.Atoms.Mvc.Entity;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -58,13 +59,7 @@ namespace NeuroSpeech.Atoms.Entity
         {
             get
             {
-                EntityPropertyRules list = null;
-                if (!Rules.TryGetValue(type, out list))
-                {
-                    list = CreateEntityPropertyRules(type);
-                    Rules[type] = list;
-                }
-                return list;
+                return Rules[type];
             }
         }
 
@@ -88,78 +83,23 @@ namespace NeuroSpeech.Atoms.Entity
         }
 
 
-        protected virtual EntityPropertyRules CreateEntityPropertyRules(Type type)
-        {
-            EntityPropertyRules rules = DefaultEntityPropertyRules(type, IgnoreSecurity);
-            return rules;
-        }
 
         public static EntityPropertyRules DefaultEntityPropertyRules(Type type, bool admin = false)
         {
-            EntityPropertyRules list = new EntityPropertyRules(type.Name, type.FullName);
+            EntityPropertyRules list = new EntityPropertyRules(type);
 
-            list["EntityKey"] = SerializeMode.None;
-            list["EntityState"] = SerializeMode.None;
-
-            // lock down.. dont allow anything...
-            foreach (PropertyDescriptor item in TypeDescriptor.GetProperties(type))
+            foreach (var item in type.GetEntityProperties(true))
             {
-                list[item.Name] = SerializeMode.None;
+                list.SetMode(item.Name,SerializeMode.ReadWrite);
             }
 
-
-            Type entityType = typeof(EntityObject);
-
-            foreach (PropertyDescriptor item in TypeDescriptor.GetProperties(type))
-            {
-                if (!admin)
+            if (admin) {
+                foreach (var item in type.GetEntityProperties(false))
                 {
-                    if (item.Attributes.OfType<XmlIgnoreAttribute>().Any())
-                        continue;
-                    if (item.Attributes.OfType<ScriptIgnoreAttribute>().Any())
-                        continue;
+                    list.SetMode(item.Name,SerializeMode.ReadWrite);
                 }
-                else
-                {
-
-                    if (!item.Attributes.OfType<EdmScalarPropertyAttribute>().Any())
-                    {
-                        if (item.Attributes.OfType<XmlIgnoreAttribute>().Any())
-                            continue;
-                        if (item.Attributes.OfType<ScriptIgnoreAttribute>().Any())
-                            continue;
-                    }
-
-                }
-                if (item.IsReadOnly)
-                {
-                    list[item.Name] = SerializeMode.Read;
-                    continue;
-                }
-                Type propertyType = item.PropertyType;
-                if (propertyType.IsEnum)
-                    continue;
-                if (propertyType.Name.StartsWith("EntityReference"))
-                    continue;
-                if (propertyType.Assembly == entityType.Assembly)
-                    continue;
-
-                Type ownerType = type;
-
-                PropertyInfo info = ownerType.GetProperty(item.Name);
-                if (info == null || info.DeclaringType == entityType)
-                    continue;
-
-                if (entityType.IsAssignableFrom(propertyType))
-                {
-                    if (ownerType.GetProperty(item.Name + "Reference") != null)
-                    {
-                        continue;
-                    }
-                }
-
-                list[item.Name] = SerializeMode.ReadWrite;
             }
+
             return list;
         }
 
@@ -227,8 +167,7 @@ namespace NeuroSpeech.Atoms.Entity
             if (modifiedProperties == null)
                 return;
 
-            AtomEntity ae = item as AtomEntity;
-            EntityPropertyRules pr = ae.SecurityRules ?? this[entityType];
+            EntityPropertyRules pr = this[entityType];
             if (pr == null)
                 return;
 
@@ -255,6 +194,10 @@ namespace NeuroSpeech.Atoms.Entity
             {
                 object entity = g.Entity;
                 Type type = entity.GetType();
+                IRepositoryObject iro = entity as IRepositoryObject;
+                if (iro != null) {
+                    type = iro.ObjectType;
+                }
                 GenericMethods.InvokeGeneric(this, "VerifySourceEntity", type, db, entity, false);
             }
         }
@@ -294,16 +237,25 @@ namespace NeuroSpeech.Atoms.Entity
         {
             if (IgnoreSecurity)
                 return;
-            foreach (ObjectStateEntry item in cs.UpdatedEntities)
+            foreach (ChangeSet.ChangeEntry item in cs.UpdatedEntities)
             {
                 var entity = item.Entity;
                 var type = item.Entity.GetType();
-                GenericMethods.InvokeGeneric(this, "VerifyEntityModify", type, entity, item.GetModifiedProperties());
+                var iro = entity as IRepositoryObject;
+                if (iro != null) {
+                    type = iro.ObjectType;
+                }
+                GenericMethods.InvokeGeneric(this, "VerifyEntityModify", type, entity, item.OriginalValues.Keys.ToList());
             }
-            foreach (ObjectStateEntry item in cs.Deleted)
+            foreach (ChangeSet.ChangeEntry item in cs.Deleted)
             {
                 var entity = item.Entity;
                 var type = item.Entity.GetType();
+                var iro = entity as IRepositoryObject;
+                if (iro != null)
+                {
+                    type = iro.ObjectType;
+                }
                 GenericMethods.InvokeGeneric(this, "VerifySourceEntity", type, db, entity, true);
             }
         }

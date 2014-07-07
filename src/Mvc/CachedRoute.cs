@@ -22,7 +22,7 @@ namespace NeuroSpeech.Atoms
 
         private TimeSpan MaxAge { get; set; }
 
-        private static CachedRoute Instance;
+        //private static CachedRoute Instance;
 
         public static void Register(
             RouteCollection routes,
