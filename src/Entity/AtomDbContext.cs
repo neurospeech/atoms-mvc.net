@@ -7,7 +7,6 @@ using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Transactions;
 
 namespace NeuroSpeech.Atoms.Mvc.Entity
 {
@@ -81,7 +80,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
 
         public int Save()
         {
-            using (var tx = new TransactionScope())
+            using (var tx = this.Database.BeginTransaction())
             {
                 ChangeSet cs = new ChangeSet(this);
 
@@ -107,14 +106,15 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                 if (AuditContext != null) {
                     cs.EndAudit(AuditContext);
                 }
-                tx.Complete();
+                tx.Commit();
                 return result;
             }
         }
 
         public async Task<int> SaveAsync()
         {
-            using (var tx = new TransactionScope())
+
+            using (var tx = this.Database.BeginTransaction())
             {
                 ChangeSet cs = new ChangeSet(this);
 
@@ -141,7 +141,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     await cs.EndAuditAsync(AuditContext);
                 }
 
-                tx.Complete();
+                tx.Commit();
                 return result;
             }
         }
