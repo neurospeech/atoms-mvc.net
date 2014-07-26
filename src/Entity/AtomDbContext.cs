@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
+using System.Data.Entity.Validation;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -129,20 +130,35 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                 }
 
 
-                int result = await this.SaveChangesAsync();
-
-                if (SecurityContext != null)
+                try
                 {
-                    SecurityContext.ValidateAfterSave(this, cs);
+                    int result = await this.SaveChangesAsync();
+
+                    if (SecurityContext != null)
+                    {
+                        SecurityContext.ValidateAfterSave(this, cs);
+                    }
+
+
+                    if (AuditContext != null) {
+                        await cs.EndAuditAsync(AuditContext);
+                    }
+
+                    tx.Commit();
+                    return result;
                 }
-
-
-                if (AuditContext != null) {
-                    await cs.EndAuditAsync(AuditContext);
+                catch (DbEntityValidationException ve)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    foreach (var item in ve.EntityValidationErrors.Where(x=>!x.IsValid))
+                    {
+                        foreach (var error in item.ValidationErrors)
+                        {
+                            sb.AppendLine( item.Entry.Entity.GetType() + "." + error.PropertyName + ": " + error.ErrorMessage);
+                        }
+                    }
+                    throw new AtomValidationException(sb.ToString());
                 }
-
-                tx.Commit();
-                return result;
             }
         }
 
