@@ -115,11 +115,11 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             }
         }
 
-        protected void OnBeforeSave(ChangeSet changes){
+        protected virtual void OnBeforeSave(ChangeSet changes){
 
         }
 
-        protected void OnAfterSave(ChangeSet changes) { 
+        protected virtual void OnAfterSave(ChangeSet changes) { 
 
         }
 
