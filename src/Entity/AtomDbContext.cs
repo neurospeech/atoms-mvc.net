@@ -95,8 +95,6 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     cs.BeginAudit();
                 }
 
-                OnBeforeSave(cs);
-
                 int result = this.SaveChanges();
 
                 if (SecurityContext != null)
@@ -110,18 +108,10 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                 }
                 tx.Commit();
 
-                OnAfterSave(cs);
                 return result;
             }
         }
 
-        protected virtual void OnBeforeSave(ChangeSet changes){
-
-        }
-
-        protected virtual void OnAfterSave(ChangeSet changes) { 
-
-        }
 
         public async Task<int> SaveAsync()
         {
@@ -140,8 +130,6 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     cs.BeginAudit();
                 }
 
-                OnBeforeSave(cs);
-
                 try
                 {
                     int result = await this.SaveChangesAsync();
@@ -158,7 +146,6 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
 
                     tx.Commit();
 
-                    OnAfterSave(cs);
                     return result;
                 }
                 catch (DbEntityValidationException ve)
