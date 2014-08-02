@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5C709364-DB35-4FD9-912E-04764A315B30}</ProjectGuid>
+    <ProjectGuid>{A1BB9D64-6467-4CA9-9C27-EA55C14E44C6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NeuroSpeech.Atoms.Mvc</RootNamespace>
