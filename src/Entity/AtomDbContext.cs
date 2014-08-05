@@ -95,7 +95,6 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     cs.BeginAudit();
                 }
 
-
                 int result = this.SaveChanges();
 
                 if (SecurityContext != null)
@@ -108,9 +107,11 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     cs.EndAudit(AuditContext);
                 }
                 tx.Commit();
+
                 return result;
             }
         }
+
 
         public async Task<int> SaveAsync()
         {
@@ -129,7 +130,6 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     cs.BeginAudit();
                 }
 
-
                 try
                 {
                     int result = await this.SaveChangesAsync();
@@ -145,6 +145,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     }
 
                     tx.Commit();
+
                     return result;
                 }
                 catch (DbEntityValidationException ve)
