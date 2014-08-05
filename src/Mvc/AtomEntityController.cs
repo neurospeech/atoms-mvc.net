@@ -380,7 +380,7 @@ namespace NeuroSpeech.Atoms.Mvc
             }
             else
             {
-                Repository.AddEntity(copy);
+                Repository.AddEntity(item);
 
 
             }

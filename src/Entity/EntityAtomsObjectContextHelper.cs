@@ -98,7 +98,13 @@ namespace NeuroSpeech.Atoms.Entity
             ParameterExpression pe = Expression.Parameter(type);
             if (key.GetType() != pinfo.PropertyType)
             {
-                key = Convert.ChangeType(key, pinfo.PropertyType);
+                try
+                {
+                    key = Convert.ChangeType(key, pinfo.PropertyType);
+                }
+                catch (Exception ex){
+                    throw new InvalidOperationException("Conversion failed from " + key.GetType().FullName + " to " + pinfo.PropertyType.FullName, ex);
+                }
             }
             Expression compare = Expression.Equal(Expression.Property(pe, pinfo), Expression.Constant(key));
             Expression<Func<T, bool>> lambda = Expression.Lambda<Func<T, bool>>(compare, pe);
@@ -122,7 +128,7 @@ namespace NeuroSpeech.Atoms.Entity
             }
 
             Expression<Func<T, bool>> lambda = Expression.Lambda<Func<T, bool>>(c, pe);
-            return q.WhereKey(lambda);
+            return q.Where(lambda);
         }
 
         //public static Expression<Func<T, bool>> GetKeyExpression<T>(this ObjectContext context, object identity)
