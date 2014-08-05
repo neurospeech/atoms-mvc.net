@@ -29,10 +29,12 @@ namespace NeuroSpeech.Atoms.Entity
             {
                 Entity = f.Entity;
                 State = f.State;
+                OriginalValues = new Dictionary<string, object>();
+
                 if (State != EntityState.Modified)
                     return;
                 
-                var d = new Dictionary<string, object>();
+                var d = OriginalValues;
                 foreach (var item in f.GetModifiedProperties())
                 {
                     d[item] = f.OriginalValues[item];
@@ -45,10 +47,13 @@ namespace NeuroSpeech.Atoms.Entity
             {
                 Entity = f.Entity;
                 State = f.State;
+
+                OriginalValues = new Dictionary<string, object>();
+
                 if (State != EntityState.Modified)
                     return;
 
-                var d = new Dictionary<string, object>();
+                var d = OriginalValues;
                 foreach (var item in f.OriginalValues.PropertyNames)
                 {
                     var fp = f.Property(item);
