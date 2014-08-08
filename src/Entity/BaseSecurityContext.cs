@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Data.Entity;
 using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Core.Objects.DataClasses;
 using System.Linq;
@@ -202,6 +203,8 @@ namespace NeuroSpeech.Atoms.Entity
             }
         }
 
+        internal static GenericMethods GenericMethods = new GenericMethods();
+
         /// <summary>
         /// Verifies Entity along with Filter Expression, after filtering, Entity should result in the same entity
         /// </summary>
@@ -259,6 +262,8 @@ namespace NeuroSpeech.Atoms.Entity
                 GenericMethods.InvokeGeneric(this, "VerifySourceEntity", type, db, entity, true);
             }
         }
+
+        
     }
 
 }

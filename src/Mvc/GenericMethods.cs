@@ -20,9 +20,10 @@ namespace NeuroSpeech.Atoms.Mvc
     public class GenericMethods
     {
 
-        private static ThreadSafeDictionary<string, Func<object, object[], object>> CachedMethods = new ThreadSafeDictionary<string, Func<object, object[], object>>();
 
-        public static object InvokeGeneric(object instance, string name, Type[] types, params object[] arguments) {
+        private ThreadSafeDictionary<string, Func<object, object[], object>> CachedMethods = new ThreadSafeDictionary<string, Func<object, object[], object>>();
+
+        public object InvokeGeneric(object instance, string name, Type[] types, params object[] arguments) {
             Type instanceType = instance.GetType();
 
             string key = instanceType.FullName + ":" + name + ":" + string.Join(":", types.Select(t=>t.FullName));
@@ -35,7 +36,7 @@ namespace NeuroSpeech.Atoms.Mvc
             return result(instance, arguments);
         }
 
-        public static object InvokeGeneric(object instance, string name, Type type, params object[] arguments)
+        public object InvokeGeneric(object instance, string name, Type type, params object[] arguments)
         {
 
             Type instanceType = instance.GetType();
@@ -50,7 +51,7 @@ namespace NeuroSpeech.Atoms.Mvc
             return result(instance, arguments);
         }
 
-        private static Func<object, object[], object> CreateMethod(Type instanceType, string name,params Type[] types)
+        private Func<object, object[], object> CreateMethod(Type instanceType, string name,params Type[] types)
         {
 
 
@@ -89,9 +90,9 @@ namespace NeuroSpeech.Atoms.Mvc
         }
 
 
-        private static ThreadSafeDictionary<string, Func<object, object>> CachedProperties = new ThreadSafeDictionary<string, Func<object, object>>();
+        private ThreadSafeDictionary<string, Func<object, object>> CachedProperties = new ThreadSafeDictionary<string, Func<object, object>>();
 
-        internal static object GetProperty(object obj, PropertyDescriptor pd)
+        internal object GetProperty(object obj, PropertyDescriptor pd)
         {
             if(obj==null)
                 return null;
@@ -107,7 +108,7 @@ namespace NeuroSpeech.Atoms.Mvc
             return f(obj);
         }
 
-        internal static object GetProperty(object obj, PropertyInfo p)
+        internal object GetProperty(object obj, PropertyInfo p)
         {
             if (obj == null)
                 return null;

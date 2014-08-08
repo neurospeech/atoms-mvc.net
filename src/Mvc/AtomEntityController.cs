@@ -22,6 +22,10 @@ namespace NeuroSpeech.Atoms.Mvc
 
 
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TOC"></typeparam>
     [ValidateInput(false)]
     public abstract class AtomEntityController<TOC> : AtomController<TOC>
         where TOC : ISecureRepository
@@ -34,6 +38,8 @@ namespace NeuroSpeech.Atoms.Mvc
                 return this.Repository;
             }
         }
+
+        static GenericMethods GenericMethods = new GenericMethods();
 
         public virtual async Task<ActionResult> Parent(string table, string id, string property) {
             Type entityType = GetType(Repository, table);

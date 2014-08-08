@@ -199,6 +199,8 @@ namespace System.Web.Mvc
 
             }
 
+            static GenericMethods GenericMethods = new GenericMethods();
+
     		private string QuotedString(string p)
     		{
     			return JS.Serialize(p);

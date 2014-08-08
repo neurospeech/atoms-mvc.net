@@ -112,6 +112,19 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             }
         }
 
+        private static GenericMethods GenericMethods = new GenericMethods();
+
+        public async Task VerifySourceEntity<T>(T entity, bool deleted = false)
+            where T:class
+        {
+            var rule = deleted ? SecurityContext.GetDeleteRule<T>(this) : SecurityContext.GetWriteRule<T>(this);
+            IQueryable<T> q = this.Set<T>();
+            var e = await q.Where(rule).WhereCopy(entity).FirstOrDefaultAsync();
+            if (e != entity) {
+                Type type = typeof(T);
+                throw new EntityAccessException(type, "Can not " + (deleted ? "Delete" : "Modify" ) +  " Entity " + type.FullName, "");
+            }
+        }
 
         public async Task<int> SaveAsync()
         {
@@ -120,9 +133,23 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             {
                 ChangeSet cs = new ChangeSet(this);
 
-                if (SecurityContext != null)
+                if (!(SecurityContext == null || SecurityContext.IgnoreSecurity))
                 {
-                    SecurityContext.ValidateBeforeSave(this, cs);
+                    foreach (var item in cs.UpdatedEntities)
+                    {
+                        BaseSecurityContext.GenericMethods.InvokeGeneric(
+                            SecurityContext, 
+                            "VerifyEntityModify", 
+                            item.EntityType, 
+                            item.Entity, 
+                            item.OriginalValues.Keys.ToList());
+                    }
+
+                    foreach (var item in cs.Deleted)
+                    {
+                        await (Task)GenericMethods.InvokeGeneric(this,
+                            "VerifySourceEntity", item.EntityType, item.Entity, true);
+                    }
                 }
 
                 if (AuditContext != null)
@@ -134,9 +161,13 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                 {
                     int result = await this.SaveChangesAsync();
 
-                    if (SecurityContext != null)
+                    if (!(SecurityContext == null || SecurityContext.IgnoreSecurity))
                     {
-                        SecurityContext.ValidateAfterSave(this, cs);
+                        foreach (var item in cs.UpdatedEntities)
+                        {
+                            await (Task)GenericMethods.InvokeGeneric(this,
+                                "VerifySourceEntity", item.EntityType, item.Entity, false);
+                        }
                     }
 
 

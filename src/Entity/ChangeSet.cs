@@ -1,5 +1,6 @@
 using NeuroSpeech.Atoms.Entity.Audit;
 using NeuroSpeech.Atoms.Mvc;
+using NeuroSpeech.Atoms.Mvc.Entity;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -30,7 +31,11 @@ namespace NeuroSpeech.Atoms.Entity
                 Entity = f.Entity;
                 State = f.State;
                 OriginalValues = new Dictionary<string, object>();
-
+                EntityType = Entity.GetType();
+                IRepositoryObject ro = Entity as IRepositoryObject;
+                if (ro != null) {
+                    EntityType = ro.ObjectType;
+                }
                 if (State != EntityState.Modified)
                     return;
                 
@@ -48,6 +53,13 @@ namespace NeuroSpeech.Atoms.Entity
                 Entity = f.Entity;
                 State = f.State;
 
+                EntityType = Entity.GetType();
+                IRepositoryObject ro = Entity as IRepositoryObject;
+                if (ro != null)
+                {
+                    EntityType = ro.ObjectType;
+                }
+
                 OriginalValues = new Dictionary<string, object>();
 
                 if (State != EntityState.Modified)
@@ -63,9 +75,10 @@ namespace NeuroSpeech.Atoms.Entity
                 }
             }
 
-            public object Entity { get; set; }
-            public EntityState State { get; set; }
-            public Dictionary<string,object> OriginalValues { get; set; }
+            public object Entity { get; private set; }
+            public Type EntityType { get; private set; }
+            public EntityState State { get; private set; }
+            public Dictionary<string,object> OriginalValues { get; private set; }
         }
 
         public IEnumerable<ChangeEntry> Added { get; private set; }

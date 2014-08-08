@@ -243,10 +243,12 @@ namespace NeuroSpeech.Atoms.Linq
 
         private Expression ApplyFilter(Expression root,Type type)
         {
-            Expression exp = (Expression)GenericMethods.InvokeGeneric(SecurityContext, "GetReadRule", type, new object[] { null });
+            Expression exp = (Expression)BaseSecurityContext.GenericMethods.InvokeGeneric(SecurityContext, "GetReadRule", type, new object[] { null });
             if (exp == null)
                 return root;
             return Expression.Call(typeof(Enumerable), "Where", new Type[] { type }, root, exp);
         }
+
+        
     }
 }
