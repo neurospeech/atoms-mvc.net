@@ -129,7 +129,10 @@ namespace System.Web.Mvc {
         {
             foreach (var item in src)
             {
-                Build(item.Dependencies, dest);
+                if (item.Dependencies != null && item.Dependencies.Count > 0)
+                {
+                    Build(item.Dependencies, dest);
+                }
 
                 if (dest.Contains(item))
                     continue;
@@ -154,16 +157,6 @@ namespace System.Web.Mvc {
             set;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public static bool UseCDN { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static string CDNHost { get; set; }
-
         private static List<HtmlResource> registeredResources = new List<HtmlResource>();
 
         private static T Create<T>(string path, string cdnPath, params HtmlResource[] dependencies)
@@ -184,19 +177,8 @@ namespace System.Web.Mvc {
                     {
                         rs.ResourcePath = CachedRoute.CachedUrl(rs.ResourcePath).ToHtmlString();
                     }
-                }
-                if (UseCDN)
-                {
-                    if (!string.IsNullOrWhiteSpace(cdnPath))
-                    {
+                    else {
                         rs.ResourcePath = cdnPath;
-                    }
-                    else
-                    {
-                        if (!string.IsNullOrWhiteSpace(CDNHost))
-                        {
-                            rs.ResourcePath = "//" + CDNHost + rs.ResourcePath;
-                        }
                     }
                 }
                 if (dependencies != null && dependencies.Length > 0) {

@@ -57,11 +57,14 @@ namespace NeuroSpeech.Atoms
             }
         }
 
+        public static string CDNHost { get; set; }
+
         public static HtmlString CachedUrl(string p)
         {
             if (!p.StartsWith("/"))
                 throw new InvalidOperationException("Please provide full path starting with /");
-            return new HtmlString("/cached/" + Version + p);
+            string cdnPrefix = string.IsNullOrWhiteSpace(CDNHost) ? "" : ("//" + CDNHost);
+            return new HtmlString(cdnPrefix + "/cached/" + Version + p);
         }
 
         //[Obsolete("Replace with CachedUrl",true)]
