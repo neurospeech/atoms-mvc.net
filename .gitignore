@@ -8,3 +8,4 @@ AtomsFramework/bin/*
 *.nupkg
 *.nupkg.bak
 *.suo
+AtomsFramework/NuGet.log

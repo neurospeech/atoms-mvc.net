@@ -37,7 +37,7 @@ namespace NeuroSpeech.Atoms
                 version = System.Web.Configuration.WebConfigurationManager.AppSettings["Static-Content-Version"];
                 if (string.IsNullOrWhiteSpace(version))
                 {
-                    version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+                    version = Assembly.GetCallingAssembly().GetName().Version.ToString();
                 }
             }
 
