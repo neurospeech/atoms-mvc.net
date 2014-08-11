@@ -194,6 +194,17 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing) {
+                var ac = this.AuditContext;
+                if (ac != null) {
+                    ac.Dispose();
+                    this.AuditContext = null;
+                }
+            }
+        }
 
 
     }
