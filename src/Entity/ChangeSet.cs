@@ -275,6 +275,11 @@ namespace NeuroSpeech.Atoms.Entity
 
             Type type = entity.GetType();
 
+            IRepositoryObject ro = entity as IRepositoryObject;
+            if (ro != null) {
+                type = ro.ObjectType;
+            }
+
             this.State = state;
             this.ObjectName = type.Name;
 
