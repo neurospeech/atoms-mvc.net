@@ -686,15 +686,13 @@ namespace NeuroSpeech.Atoms.Mvc
                     dynamic child = changes[cid];
                     PropertyInfo p = parentType.GetProperty(item.name);
                     dynamic d = p.GetValue(parent);
-                    d.Load();
+                    //d.Load();
                     d.Remove(child);
-                    var da = p.GetCustomAttribute<DeleteEntityOnRemoveAttribute>(false);
+                    var da = p.GetCustomAttribute<DeleteEntityOnRemoveAttribute>(true);
                     if (da != null)
                     {
                         object co = child;
-                        Type t = co.GetType();
-                        dynamic os = GenericMethods.InvokeGeneric(Repository, "GetObjectSet", t);
-                        os.DeleteObject(child);
+                        Repository.DeleteEntity(co);
                     }
                 }
             }
