@@ -207,6 +207,40 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
         }
 
 
+        /// <summary>
+        /// Creates new Security Scope
+        /// </summary>
+        /// <param name="sc"></param>
+        /// <returns></returns>
+        public IDisposable CreateSecurityScope(BaseSecurityContext sc = null) 
+        {
+            var current = this.SecurityContext;
+            this.SecurityContext = sc;
+            return new DisposableAction(() => {
+                this.SecurityContext = current;
+            });
+        }
+
+
+        
+
+
+    }
+
+    public class DisposableAction : IDisposable
+    {
+
+        private Action action;
+
+        public DisposableAction(Action action)
+        {
+            this.action = action;
+        }
+
+        public void Dispose()
+        {
+            action();
+        }
     }
 
 }
