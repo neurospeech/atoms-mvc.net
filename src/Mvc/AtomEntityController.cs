@@ -152,7 +152,11 @@ namespace NeuroSpeech.Atoms.Mvc
 
             long total = 0;
 
-            var aq = db.Query<T>().WhereJsonQuery(query,db.SecurityContext);
+            var aq = db.Query<T>();
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                aq = aq.WhereJsonQuery(query, db.SecurityContext);
+            }
             if (size != -1)
             {
                 if (string.IsNullOrWhiteSpace(orderBy))
