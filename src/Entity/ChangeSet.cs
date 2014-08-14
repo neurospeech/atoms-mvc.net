@@ -233,13 +233,13 @@ namespace NeuroSpeech.Atoms.Entity
                 IAuditItem item = ac.CreateNew();
                 item.Action = change.State.ToString();
                 item.AuditTime = DateTime.UtcNow;
-                item.IPAddress = ac.GetIPAddress();
-                item.Username = ac.GetUsername();
+                //item.IPAddress = ac.GetIPAddress();
+                //item.Username = ac.GetUsername();
                 item.TableKey = change.Key;
                 item.TableName = change.ObjectName;
                 item.Fields = sr.Serialize(change.Values);
                 item.Links = sr.Serialize(change.Links);
-                ac.AddAudit(item);
+                //ac.AddAudit(item);
             }
         }
     }
