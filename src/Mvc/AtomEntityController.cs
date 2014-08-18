@@ -179,15 +179,23 @@ namespace NeuroSpeech.Atoms.Mvc
                 rq = aq.SelectDynamic(d);
             }
 
-            object result = await rq.ToListAsync();
-            if (size != -1) {
-                result = new { 
-                    items = result,
-                    total = total,
-                    merge = true
-                };
+            try
+            {
+                object result = await rq.ToListAsync();
+                if (size != -1)
+                {
+                    result = new
+                    {
+                        items = result,
+                        total = total,
+                        merge = true
+                    };
+                }
+                return JsonResult(result);
             }
-            return JsonResult(result);
+            catch {
+                throw new InvalidOperationException(rq.ToString());
+            }
         }
 
         private Dictionary<string, string> PrepareFields<T>(string fields) where T : class

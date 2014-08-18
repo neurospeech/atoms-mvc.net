@@ -37,7 +37,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
 
         public IQueryable<T> ApplyFilter<T>(IQueryable<T> q) where T : class
         {
-            if (SecurityContext != null)
+            if (SecurityContext != null && !SecurityContext.IgnoreSecurity)
             {
                 var rule = SecurityContext.GetReadRule<T>(this);
                 if (rule != null)

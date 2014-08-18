@@ -108,6 +108,7 @@
     <Compile Include="Entity\PropertyRuleDictionary.cs" />
     <Compile Include="Entity\SecurityContextCreator.cs" />
     <Compile Include="Entity\SerializeMode.cs" />
+    <Compile Include="JavaScriptTagHelper.cs" />
     <Compile Include="Mvc\AtomDataResult.cs" />
     <Compile Include="Mvc\AtomDictionary.cs" />
     <Compile Include="Mvc\AtomEntityController.cs" />
