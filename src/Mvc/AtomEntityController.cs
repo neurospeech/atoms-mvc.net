@@ -193,8 +193,8 @@ namespace NeuroSpeech.Atoms.Mvc
                 }
                 return JsonResult(result);
             }
-            catch {
-                throw new InvalidOperationException(rq.ToString());
+            catch(Exception ex) {
+                throw new InvalidOperationException(rq.ToString(),ex);
             }
         }
 
@@ -610,10 +610,15 @@ namespace NeuroSpeech.Atoms.Mvc
                 var entry = this.FirstOrDefault(x => x.entity == entity);
                 if (entry == null)
                 {
+                    Type type = entity.GetType();
+                    IRepositoryObject ro = entity as IRepositoryObject;
+                    if (ro != null) {
+                        type = ro.ObjectType;
+                    }
                     entry = new RelatedEntity
                     {
                         entity = entity,
-                        type = entity.GetType().Name
+                        type = type.Name
                     };
                     this.Add(entry);
                 }

@@ -22,6 +22,12 @@ namespace NeuroSpeech.Atoms.Entity
 
     public abstract class BaseSecurityContext<TC> : BaseSecurityContext
     {
+
+        public BaseSecurityContext(bool isAdmin):base(isAdmin)
+        {
+
+        }
+
         protected new EntityPropertyRulesCreator<T, TC> CreateRule<T>() 
             where T:class
         {
@@ -40,8 +46,9 @@ namespace NeuroSpeech.Atoms.Entity
         /// <summary>
         /// Initializes security context
         /// </summary>
-        public BaseSecurityContext()
+        protected BaseSecurityContext(bool isAdmin)
         {
+            IgnoreSecurity = isAdmin;
         }
 
         /// <summary>
