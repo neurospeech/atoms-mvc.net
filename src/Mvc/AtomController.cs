@@ -85,7 +85,7 @@ namespace NeuroSpeech.Atoms.Mvc
         /// <param name="optional"></param>
         /// <param name="defValue"></param>
         /// <returns></returns>
-		protected T FormValue<T>(string name, bool optional = false, T defValue = default(T)) {
+		public T FormValue<T>(string name, bool optional = false, T defValue = default(T)) {
 			object val = null;
 			if (!FormModel.TryGetValue(name, out val)) { 
 				if(!optional)
