@@ -71,7 +71,7 @@ namespace NeuroSpeech.Atoms.Entity
                     var fp = f.Property(item);
                     if (!fp.IsModified)
                         continue;
-                    d[item] = fp.CurrentValue;
+                    d[item] = fp.OriginalValue;
                 }
             }
 

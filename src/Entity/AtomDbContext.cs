@@ -79,9 +79,9 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             return entity;
         }
 
-        public int Save()
+        public override int SaveChanges()
         {
-            using (var tx = this.Database.BeginTransaction())
+            using (var tx = CreateTransactionScope())
             {
                 ChangeSet cs = new ChangeSet(this);
 
@@ -95,7 +95,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     cs.BeginAudit();
                 }
 
-                int result = this.SaveChanges();
+                int result = base.SaveChanges();
 
                 if (SecurityContext != null)
                 {
@@ -103,7 +103,8 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                 }
 
 
-                if (AuditContext != null) {
+                if (AuditContext != null)
+                {
                     cs.EndAudit(AuditContext);
                 }
                 tx.Commit();
@@ -111,6 +112,49 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                 return result;
             }
         }
+
+        public int Save()
+        {
+            return this.SaveChanges();
+        }
+
+        private DbContextTransaction CurrentTransaction;
+
+        public WrappedTransaction CreateTransactionScope() {
+            if (CurrentTransaction != null)
+                return new WrappedTransaction(null);
+            CurrentTransaction = this.Database.BeginTransaction();
+            return new WrappedTransaction(CurrentTransaction);
+        }
+
+        public class WrappedTransaction : IDisposable {
+
+            private DbContextTransaction tx;
+            private bool isCommitted = false;
+
+            public WrappedTransaction(DbContextTransaction t)
+            {
+                tx = t;
+            }
+
+            public void Commit() {
+                if (tx != null) {
+                    tx.Commit();
+                    isCommitted = true;
+                }
+            }
+
+            public void Dispose()
+            {
+                if (tx != null) {
+                    if (!isCommitted) {
+                        tx.Rollback();
+                    }
+                    tx.Dispose();
+                }       
+            }
+        }
+
 
         private static GenericMethods GenericMethods = new GenericMethods();
 
@@ -126,10 +170,10 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             }
         }
 
-        public async Task<int> SaveAsync()
+        public async override Task<int> SaveChangesAsync()
         {
-
-            using (var tx = this.Database.BeginTransaction())
+            
+            using (var tx = CreateTransactionScope())
             {
                 ChangeSet cs = new ChangeSet(this);
 
@@ -159,7 +203,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
 
                 try
                 {
-                    int result = await this.SaveChangesAsync();
+                    int result = await base.SaveChangesAsync();
 
                     if (!(SecurityContext == null || SecurityContext.IgnoreSecurity))
                     {
@@ -192,6 +236,11 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
                     throw new AtomValidationException(sb.ToString());
                 }
             }
+        }
+
+        public Task<int> SaveAsync()
+        {
+            return this.SaveChangesAsync();
         }
 
         protected override void Dispose(bool disposing)
