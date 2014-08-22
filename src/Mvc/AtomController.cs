@@ -40,16 +40,11 @@ namespace NeuroSpeech.Atoms.Mvc
 
 		}
 
-        /// <summary>
-        /// Global.asax must set SecurityContext after authentication, this method will set SecurityContext of current repository from HttpContext.Items["SecurityContext"]
-        /// </summary>
-        /// <param name="filterContext"></param>
-        protected override void OnAuthorization(AuthorizationContext filterContext)
+        protected override void Initialize(System.Web.Routing.RequestContext requestContext)
         {
-            base.OnAuthorization(filterContext);
+            base.Initialize(requestContext);
 
-            Repository.SecurityContext = HttpContext.Items["SecurityContext"] as BaseSecurityContext;
-            HttpContext.Items["Repository"] = Repository;
+            requestContext.HttpContext.Items["Repository"] = Repository;
         }
 
         /// <summary>

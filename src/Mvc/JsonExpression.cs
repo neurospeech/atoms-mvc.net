@@ -243,6 +243,8 @@ namespace NeuroSpeech.Atoms.Linq
 
         private Expression ApplyFilter(Expression root,Type type)
         {
+            if (SecurityContext.IgnoreSecurity)
+                return root;
             Expression exp = (Expression)BaseSecurityContext.GenericMethods.InvokeGeneric(SecurityContext, "GetReadRule", type, new object[] { null });
             if (exp == null)
                 return root;
