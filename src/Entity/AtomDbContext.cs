@@ -79,11 +79,18 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             return entity;
         }
 
+        private ChangeSet _ChangeSet;
+        private ChangeSet PrepareChanges() {
+            this.ChangeTracker.DetectChanges();
+            _ChangeSet = new ChangeSet(this);
+            return _ChangeSet;
+        }
+
         public override int SaveChanges()
         {
             using (var tx = CreateTransactionScope())
             {
-                ChangeSet cs = new ChangeSet(this);
+                ChangeSet cs = PrepareChanges();
 
                 if (SecurityContext != null)
                 {
@@ -113,9 +120,11 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             }
         }
 
-        public int Save()
+        public IEnumerable<object> Save()
         {
-            return this.SaveChanges();
+            this.SaveChanges();
+
+            return _ChangeSet.UpdatedEntities.Select(x => x.Entity);
         }
 
         private DbContextTransaction CurrentTransaction;
@@ -175,7 +184,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             
             using (var tx = CreateTransactionScope())
             {
-                ChangeSet cs = new ChangeSet(this);
+                ChangeSet cs = this.PrepareChanges();
 
                 if (!(SecurityContext == null || SecurityContext.IgnoreSecurity))
                 {
@@ -238,9 +247,10 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             }
         }
 
-        public Task<int> SaveAsync()
+        public async Task<IEnumerable<object>> SaveAsync()
         {
-            return this.SaveChangesAsync();
+            await this.SaveChangesAsync();
+            return _ChangeSet.UpdatedEntities.Select(x => x.Entity);
         }
 
         protected override void Dispose(bool disposing)

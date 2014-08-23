@@ -644,7 +644,7 @@ namespace NeuroSpeech.Atoms.Mvc
             ChangeSet model = new ChangeSet();
             LoadModel(model);
 
-            List<object> changes = new List<object>();
+            List<UpdatedEntity> changes = new List<UpdatedEntity>();
 
             foreach (Change entity in model.entities)
             {
@@ -657,7 +657,7 @@ namespace NeuroSpeech.Atoms.Mvc
                     dbEntity = Activator.CreateInstance(clrType);
                     LoadModel(dbEntity, entity.changes);
                     db.AddEntity(dbEntity);
-                    changes.Add(dbEntity);
+                    changes.Add(new UpdatedEntity { type = entityType, entity = dbEntity });
                 }
                 else
                 {
@@ -669,7 +669,7 @@ namespace NeuroSpeech.Atoms.Mvc
                     }
                     dbEntity = final;
                     LoadModel(dbEntity, entity.changes);
-                    changes.Add(dbEntity);
+                    changes.Add(new UpdatedEntity { type = entityType, entity = dbEntity });
                 }
 
             }
@@ -678,14 +678,14 @@ namespace NeuroSpeech.Atoms.Mvc
             {
                 int id = association.id;
 
-                object parent = changes[id];
+                object parent = changes[id].entity;
 
                 Type parentType = parent.GetType();
 
                 foreach (var item in association.added)
                 {
                     int cid = item.id;
-                    dynamic child = changes[cid];
+                    dynamic child = changes[cid].entity;
                     PropertyInfo p = parentType.GetProperty(item.name);
                     System.Collections.IEnumerable list = p.GetValue(parent) as System.Collections.IEnumerable;
                     if (list == null)
@@ -700,7 +700,7 @@ namespace NeuroSpeech.Atoms.Mvc
                 foreach (var item in association.removed)
                 {
                     int cid = item.id;
-                    dynamic child = changes[cid];
+                    dynamic child = changes[cid].entity;
                     PropertyInfo p = parentType.GetProperty(item.name);
                     dynamic d = p.GetValue(parent);
                     //d.Load();
@@ -715,12 +715,22 @@ namespace NeuroSpeech.Atoms.Mvc
             }
 
 
+            var updatedEntities = await db.SaveAsync();
 
-            await db.SaveAsync();
+            var nc = updatedEntities.Where(x => !changes.Any(y => y.entity == x)).Select(x => new UpdatedEntity {
+                type = (x is IRepositoryObject) ? ((IRepositoryObject)x).ObjectType.Name : x.GetType().Name,
+                entity = x
+            }).ToList();
+
+            changes.AddRange(nc);
 
             return JsonResult(changes);
         }
 
+        public class UpdatedEntity {
+            public string type { get; set; }
+            public object entity { get; set; }
+        }
 
         public abstract class ListLoader : IJavaScriptDeserializable
         {
@@ -770,10 +780,12 @@ namespace NeuroSpeech.Atoms.Mvc
             {
                 entities = new List<Change>();
                 associations = new List<Association>();
+                updated = new List<object>();
             }
 
             public List<Change> entities { get; set; }
             public List<Association> associations { get; set; }
+            public List<object> updated { get; set; }
 
         }
 

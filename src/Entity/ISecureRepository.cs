@@ -88,14 +88,14 @@ namespace NeuroSpeech.Atoms.Entity
         /// Final call to SaveChanges wrapped up in Transaction to validate after changes LINQ Rules
         /// </summary>
         /// <returns></returns>
-        int Save();
+        IEnumerable<object> Save();
 
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        Task<int> SaveAsync();
+        Task<IEnumerable<object>> SaveAsync();
 
     }
 }
