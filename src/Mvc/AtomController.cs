@@ -200,7 +200,13 @@ namespace NeuroSpeech.Atoms.Mvc
 					}
 					else
 					{
-						val = Convert.ChangeType(val, pt);
+                        try
+                        {
+                            val = Convert.ChangeType(val, pt);
+                        }
+                        catch (Exception ex) {
+                            throw new InvalidOperationException("Failed to convert " + val + " to " + pt.FullName, ex);
+                        }
 					}
 				}
 
