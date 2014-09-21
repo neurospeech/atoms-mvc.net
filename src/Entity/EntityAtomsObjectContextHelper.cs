@@ -145,46 +145,42 @@ namespace NeuroSpeech.Atoms.Entity
         //    return x;
         //}
 
-        private static ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>> keyList = new ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>>();
-        private static ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>> allList = new ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>>();
 
+        private static ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>> _keyList = new ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>>();
+        private static ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>> _allList = new ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>>();
 
         public static IEnumerable<AtomPropertyInfo> GetEntityProperties(this Type type, bool keyOnly = false)
         {
-            ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>> cache = keyOnly ? keyList : allList;
+            ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>> cache = keyOnly ? _keyList : _allList;
 
-            IEnumerable<AtomPropertyInfo> result = null;
 
-            if (cache.TryGetValue(type, out result)) {
-                return result;
-            }
-
-            List<AtomPropertyInfo> list = new List<AtomPropertyInfo>();
-
-            foreach (PropertyInfo p in type.GetProperties())
+            return cache.GetOrAdd(type, t =>
             {
-                EntityPropertyAttribute a = p.GetCustomAttribute<EntityPropertyAttribute>();
-                if (a == null)
-                    continue;
-                if (keyOnly)
+
+
+                List<AtomPropertyInfo> list = new List<AtomPropertyInfo>();
+
+                foreach (PropertyInfo p in type.GetProperties())
                 {
-                    if (a.IsKey)
+                    EdmScalarPropertyAttribute a = p.GetCustomAttribute<EdmScalarPropertyAttribute>();
+                    if (a == null)
+                        continue;
+                    if (keyOnly)
                     {
-                        list.Add( new AtomPropertyInfo(type, p,true));
+                        if (a.EntityKeyProperty)
+                        {
+                            list.Add(new AtomPropertyInfo(type, p, true));
+                        }
                     }
+                    else
+                    {
+                        list.Add(new AtomPropertyInfo(type, p, a.EntityKeyProperty));
+                    }
+
                 }
-                else
-                {
-                    list.Add(new AtomPropertyInfo(type, p, false));
-                }
 
-            }
-
-            result = list;
-
-            cache[type] = result;
-
-            return result;
+                return list;
+            });
         }
 
         //private static ThreadSafeDictionary<Type, IEnumerable<PropertyInfo>> navProperties = new ThreadSafeDictionary<Type, IEnumerable<PropertyInfo>>();
