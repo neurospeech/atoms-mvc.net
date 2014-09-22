@@ -22,6 +22,7 @@ namespace NeuroSpeech.Atoms
 
         private TimeSpan MaxAge { get; set; }
 
+        public static string CORSOrigins { get; set; }
         //private static CachedRoute Instance;
 
         public static void Register(
@@ -79,6 +80,12 @@ namespace NeuroSpeech.Atoms
             Response.Cache.SetCacheability(HttpCacheability.Public);
             Response.Cache.SetMaxAge(MaxAge);
             Response.Cache.SetExpires(DateTime.Now.Add(MaxAge));
+
+            if (CORSOrigins != null)
+            {
+                Response.Headers.Add("Access-Control-Allow-Origin", CORSOrigins);
+            }
+
 
             string FilePath = context.Items["FilePath"] as string;
 
