@@ -162,19 +162,19 @@ namespace NeuroSpeech.Atoms.Entity
 
                 foreach (PropertyInfo p in type.GetProperties())
                 {
-                    EdmScalarPropertyAttribute a = p.GetCustomAttribute<EdmScalarPropertyAttribute>();
+                    EntityPropertyAttribute a = p.GetCustomAttribute<EntityPropertyAttribute>();
                     if (a == null)
                         continue;
                     if (keyOnly)
                     {
-                        if (a.EntityKeyProperty)
+                        if (a.IsKey)
                         {
                             list.Add(new AtomPropertyInfo(type, p, true));
                         }
                     }
                     else
                     {
-                        list.Add(new AtomPropertyInfo(type, p, a.EntityKeyProperty));
+                        list.Add(new AtomPropertyInfo(type, p, a.IsKey));
                     }
 
                 }
