@@ -119,15 +119,18 @@ namespace NeuroSpeech.Atoms.Linq
 
             Expression ve = Expression.Constant(null);
 
+            Type vt = Nullable.GetUnderlyingType(type);
+
             if (value != null)
             {
                 Type valueType = value.GetType();
-                Type vt = Nullable.GetUnderlyingType(type);
                 if (valueType.IsArray || valueType == type)
                 {
                     ve = Expression.Constant(value);
                 }
-                else
+                else if (value is ArrayList) {
+                    ve = Expression.Constant(value);
+                }else 
                 {
                     if (vt != null) {
                         if (vt == typeof(DateTime) && value.GetType() == typeof(string))
@@ -165,10 +168,15 @@ namespace NeuroSpeech.Atoms.Linq
                 case "between":
                     if (value == null)
                         return null;
-                    var objArray = new List<object>(value as IEnumerable<object>);
+                    var objArray = new List<object>(CreateList(value,typeof(object)).Cast<object>());
+                    if (objArray.Any(x => x == null))
+                        return null;
+                    if (vt == typeof(DateTime)) {
+                        objArray = objArray.Select(x => (object)AtomJavaScriptSerializer.ToDateTime(x as string)).ToList();
+                    }
                     return Expression.And(
-                        Expression.GreaterThanOrEqual(root, Expression.Constant(objArray.FirstOrDefault())),
-                        Expression.LessThanOrEqual(root,Expression.Constant(objArray.LastOrDefault())));
+                        Expression.GreaterThanOrEqual(root, Expression.Constant(objArray.FirstOrDefault(),type)),
+                        Expression.LessThanOrEqual(root,Expression.Constant(objArray.LastOrDefault(),type)));
                 case "contains":
                     return Expression.Call(root, StringContainsMethod, ve);
                 case "startswith":
@@ -191,7 +199,7 @@ namespace NeuroSpeech.Atoms.Linq
         private static MethodInfo StringStartsWithMethod = typeof(string).GetMethod("StartsWith", new Type[] { typeof(string) });
         private static MethodInfo StringEndsWithMethod = typeof(string).GetMethod("EndsWith", new Type[] { typeof(string) });
 
-        private object CreateList(object value, Type type)
+        private IList CreateList(object value, Type type)
         {
             Type lt = typeof(List<>).MakeGenericType(type);
             IList ic = Activator.CreateInstance(lt) as IList;
