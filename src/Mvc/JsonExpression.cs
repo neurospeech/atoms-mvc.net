@@ -162,6 +162,13 @@ namespace NeuroSpeech.Atoms.Linq
                     return Expression.LessThan(root, ve);
                 case "<=":
                     return Expression.LessThanOrEqual(root, ve);
+                case "between":
+                    if (value == null)
+                        return null;
+                    var objArray = new List<object>(value as IEnumerable<object>);
+                    return Expression.And(
+                        Expression.GreaterThanOrEqual(root, Expression.Constant(objArray.FirstOrDefault())),
+                        Expression.LessThanOrEqual(root,Expression.Constant(objArray.LastOrDefault())));
                 case "contains":
                     return Expression.Call(root, StringContainsMethod, ve);
                 case "startswith":
