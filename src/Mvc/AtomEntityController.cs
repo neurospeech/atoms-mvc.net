@@ -80,7 +80,7 @@ namespace NeuroSpeech.Atoms.Mvc
             var r = db.NavigationQuery<CT>(tx,p.Name, true);
             var q = Repository.ApplyFilter<CT>(r);
 
-            q = q.WhereJsonQuery(query,db.SecurityContext);
+            q = q.WhereJsonQuery(query,db);
             long total = 0;
             if (size != -1)
             {
@@ -118,7 +118,7 @@ namespace NeuroSpeech.Atoms.Mvc
             string includeList = Request.QueryString["include"] ?? "";
             if (!string.IsNullOrWhiteSpace(includeList))
             {
-                IQueryable<T> q = db.Query<T>().WhereJsonQuery(query,db.SecurityContext);
+                IQueryable<T> q = db.Query<T>().WhereJsonQuery(query,db);
                 Type type = typeof(T);
 
                 var propList = includeList.Split(',').Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
@@ -155,7 +155,7 @@ namespace NeuroSpeech.Atoms.Mvc
             var aq = db.Query<T>();
             if (!string.IsNullOrWhiteSpace(query))
             {
-                aq = aq.WhereJsonQuery(query, db.SecurityContext);
+                aq = aq.WhereJsonQuery(query, db);
             }
             if (size != -1)
             {
@@ -227,7 +227,7 @@ namespace NeuroSpeech.Atoms.Mvc
         public virtual async Task<ActionResult> GetEntity<T>(string query, string fields, string orderBy)
             where T : class
         {
-            var aq = db.Query<T>().WhereJsonQuery(query,db.SecurityContext);
+            var aq = db.Query<T>().WhereJsonQuery(query,db);
             if (!string.IsNullOrWhiteSpace(orderBy))
             {
                 aq = aq.OrderBy(orderBy);
@@ -247,7 +247,7 @@ namespace NeuroSpeech.Atoms.Mvc
             if (string.IsNullOrWhiteSpace(ids))
                 return JsonError("Invalid Request");
             string query = "{ '$id:in':[" + ids + "]}";
-            var result = await db.Query<T>().WhereJsonQuery(query, db.SecurityContext).ToListAsync();
+            var result = await db.Query<T>().WhereJsonQuery(query, db).ToListAsync();
 
             foreach (var e in result) {
                 db.DeleteEntity(e);
@@ -308,7 +308,7 @@ namespace NeuroSpeech.Atoms.Mvc
             T item = Activator.CreateInstance<T>();
             LoadModel(item);
 
-            var aq = db.Query<T>().WhereJsonQuery(query,db.SecurityContext);
+            var aq = db.Query<T>().WhereJsonQuery(query,db);
             if (string.IsNullOrWhiteSpace(orderBy))
             {
                 return JsonError("orderBy missing");
@@ -359,7 +359,7 @@ namespace NeuroSpeech.Atoms.Mvc
 
             string query = "{'$id:in':['" + ids + "']}";
 
-            var list = await db.Query<T>().WhereJsonQuery(query, db.SecurityContext).ToListAsync();
+            var list = await db.Query<T>().WhereJsonQuery(query, db).ToListAsync();
             foreach (var item in list)
             {
                 LoadModel(item);

@@ -19,21 +19,23 @@ namespace NeuroSpeech.Atoms.Linq
 
         public IDictionary<string, object> Values { get; private set; }
 
-        public BaseSecurityContext SecurityContext { get; private set; }
+        public ISecureRepository Repository { get; private set; }
+
+        public BaseSecurityContext SecurityContext { get { return Repository.SecurityContext; } }
 
         public Expression<Func<T, bool>> Linq { get; private set; }
 
-        public JsonExpression(string json, BaseSecurityContext context = null)
+        public JsonExpression(string json, ISecureRepository db = null)
         {
             JavaScriptSerializer js = new JavaScriptSerializer();
             Values = (IDictionary<string, object>)js.Deserialize(json, typeof(Dictionary<string, object>));
-            this.SecurityContext = context;
+            this.Repository = db;
         }
 
-        public JsonExpression(IDictionary<string, object> values, BaseSecurityContext context = null)
+        public JsonExpression(IDictionary<string, object> values, ISecureRepository db = null)
         {
             this.Values = values;
-            this.SecurityContext = context;
+            this.Repository = db;
         }
 
         public Expression<Func<T, bool>> Parse()
@@ -260,7 +262,7 @@ namespace NeuroSpeech.Atoms.Linq
         {
             if (SecurityContext.IgnoreSecurity)
                 return root;
-            Expression exp = (Expression)BaseSecurityContext.GenericMethods.InvokeGeneric(SecurityContext, "GetReadRule", type, new object[] { null });
+            Expression exp = (Expression)BaseSecurityContext.GenericMethods.InvokeGeneric(SecurityContext, "GetReadRule", type, new object[] { Repository });
             if (exp == null)
                 return root;
             return Expression.Call(typeof(Enumerable), "Where", new Type[] { type }, root, exp);

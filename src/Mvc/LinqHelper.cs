@@ -17,9 +17,9 @@ namespace System.Linq
     {
 
 
-        public static IQueryable<T> WhereJsonQuery<T>(this IQueryable<T> q, string query, BaseSecurityContext security = null)
+        public static IQueryable<T> WhereJsonQuery<T>(this IQueryable<T> q, string query, ISecureRepository repository = null)
         {
-            JsonExpression<T> exp = new JsonExpression<T>(query, security);
+            JsonExpression<T> exp = new JsonExpression<T>(query, repository);
             var e = exp.Parse();
             if (e == null)
                 return q;
