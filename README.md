@@ -199,3 +199,7 @@ Example Queries
      { 'Status in':[ 'Sent', 'Pending' ] }
      var list = new List<string>(){ 'Sent','Pending' };
      msg => list.Contains(msg.Status);
+
+Each of query is filtered upon existing Security Context rules, and 
+properties are returned only on the basis of Read access, so you do not have to
+write or worry about any DTOs anymore.
