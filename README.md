@@ -82,6 +82,12 @@ How does it work?
 Instead of DbContext, we have provided AtomDbContext, which contains SecurityContext property, 
 and all operations performed through this class passed through SecurityContext and it obeys every rule.
 
+DbContext Generator
+-------------------
+
+We have included text template in the folder "db-context-tt", which you have to include in your Model folder and set
+connection string to generate DbContext model automatically from specified database.
+
 Query Method
 ------------
 If you use `db.Messages.Where()` method, there are no security rules applied. So you have to use following Query 
@@ -91,6 +97,9 @@ SaveChanges Method
 ------------------
 
 When you call SaveChanges method, following logic is executed.
+
+This is for reference, this happens automatically as a part of validation logic, you do not have to 
+    write this code.
     
     //For every modified entity, we query entity to database with identity query for example,
 

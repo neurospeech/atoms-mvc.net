@@ -1,0 +1,295 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
+<#@  include file="Atoms.Entity.ttinclude" #>
+<#@  include file="ConnectionString.ttinclude" #>
+<#@ assembly name="System.Data" #>
+<#@ assembly name="System.Data.Entity" #>
+<#@ assembly name="System.Xml" #>
+<#@ assembly name="System.Xml.Linq" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="System.Xaml" #>
+<#@ import namespace="System.Data" #>
+<#@ import namespace="System.Text" #>
+<# 
+
+    AtomPluralService.Add("AccountAddress","AccountAddresses");
+
+	Container = new EAContainer();
+	Container.ConnectionString = connectionString;
+	Container.Provider = "System.Data.SqlClient";
+	Container.Name = "CrmPrompt";
+	Container.Namespace = "CrmApp.Models";
+	Container.ContainerName = "CrmPrompt";
+	Container.IgnoreTables = "sysdiagrams,audititems";
+
+	Container.Refresh();
+#>
+
+using System;
+using System.Data.Entity;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using NeuroSpeech.Atoms;
+using NeuroSpeech.Atoms.Mvc;
+using NeuroSpeech.Atoms.Mvc.Entity;
+using NeuroSpeech.Atoms.Entity;
+using System.Xml.Serialization;
+using System.Collections.Generic;
+
+namespace <#= Container.Namespace #>
+{
+   
+   #region Contexts
+   
+   /// <summary>
+   /// No Metadata Documentation available.
+   /// </summary>
+   public partial class <#= ContextName #> : AtomDbContext 
+   {
+		#region Constructors
+		
+		/// <summary>
+		/// Initializes a new <#= ContextName #> object using the connection string found in the '<#= ContextName #>' section of the application configuration file.
+		/// </summary>
+	    public <#= ContextName #>() : base("name=<#= ContextName #>")
+	    {
+			this.Configuration.LazyLoadingEnabled = true;
+	        OnContextCreated();
+	    }
+		
+		/// <summary>
+		/// Initialize a new <#= ContextName #> object.
+		/// </summary>
+	    public <#= ContextName #>(string connectionString) : base(connectionString)
+	    {
+			this.Configuration.LazyLoadingEnabled = true;
+	        OnContextCreated();
+	    }
+			
+		#endregion
+		
+		#region Partial Methods
+		
+    	partial void OnContextCreated();		
+		
+		#endregion
+		
+		#region DbSet Properties
+		
+		<# foreach(EAEntity obj in Container.ActiveEntities) { 
+
+			#>
+        
+		/// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+		public virtual DbSet<<#= obj.Name #>> <#= obj.EntitySet #>
+		{
+			get; set;
+		}
+
+	    <# } #>
+		
+		#endregion
+		
+		
+		
+   }
+   #endregion
+
+   #region Entities
+   
+   
+   <# foreach(EAEntity obj in Container.ActiveEntities) { 
+
+		string baseTypeName = obj.BaseType;
+		if(string.IsNullOrWhiteSpace(baseTypeName)){
+			baseTypeName = "IRepositoryObject";
+		}
+	#>
+   
+   /// <summary>
+   /// No Metadata Documentation available.
+   /// </summary>
+    [Serializable()]
+    [Table("<#= obj.TableName #>")]
+   // Adding Metadata Type
+   public partial class <#= obj.Name #> : <#= baseTypeName #>
+   {	    
+   
+		Type IRepositoryObject.ObjectType {get { return typeof(<#=obj.Name#>); }}
+		
+
+		public <#= obj.Name #>(){
+			<# foreach(var item in obj.NavigationProperties.Where(x=> x.Multiplicity == EAMultiplicity.Many)) { #>
+				this.<#= item.Name #> = new List<<#= item.Type #>>();
+			<# } #>
+		}
+
+
+		#region Primitive Properties
+		
+		<# foreach(var item in obj.ActiveProperties) {
+				String cType = TypeHelper.ToClrType(item);
+			
+			bool isReference = cType == "String" || cType == "Byte[]";
+			#>
+
+		<# if(item.IsPrimary){ #>		
+        [Key]
+		[EntityProperty(true)]
+		<# } else { #>
+		[EntityProperty(false)]
+		[XmlIgnore]
+		[System.Web.Script.Serialization.ScriptIgnore]
+		<# } #>
+		<# if(item.IsIdentity){ #>
+		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		<# } #>
+		<# 
+			foreach(EAEntityProperty p in item.RelatedProperties)
+			{ 
+				
+			#>
+			[NeuroSpeech.Atoms.Entity.Audit.FKProperty("<#= p.ObjectName  #>","<#= p.Name #>")]
+			<# } 
+			
+			#>
+		
+		<#= WriterMetadataAttributes(item) #>
+
+		public virtual global::System.<#= cType #> <#= item.Name #>
+		{
+			get;
+			set;
+		}
+		
+		<# } #>
+	
+		#endregion
+		
+		#region Navigation Properties	
+		<# foreach(var item in obj.NavigationProperties) { #>		
+		
+        /// <summary>
+        /// No Metadata Documentation available.
+        /// </summary>
+        [XmlIgnoreAttribute()]
+        [SoapIgnoreAttribute()]
+        [InverseProperty("<#= item.OtherNavigationProperty.Name #>")]
+		<# if(item.Multiplicity == EAMultiplicity.Many) { #>		
+        <#                if(!item.OtherProperty.IsNullable) {#>
+        [DeleteEntityOnRemove]
+<#                }#>
+
+		public virtual List<<#= item.Type #>> <#= item.Name #>
+		{
+            get;
+            set;		
+		}<# } else {  #>				
+		[ForeignKey("<#= item.SelfProperty.Name #>")]
+		public virtual <#= item.Type #> <#= item.Name #>
+		{
+            get;
+            set;
+			
+		}	
+
+		<# } #>
+		
+		<# } #>		
+		#endregion
+		
+   }
+   
+   		
+   <# } #>
+   #endregion
+
+
+   #region Base Security Context
+
+   public partial class Base<#=Container.ContainerName#>SecurityContext : BaseSecurityContext<<#=ContextName#>>{
+
+    partial void OnCreated();
+
+	protected Base<#=Container.ContainerName#>SecurityContext(bool isAdmin):base(isAdmin){
+       <# foreach(EAEntity obj in Container.ActiveEntities) { #>
+			Set<#= obj.Name #>Rules(CreateRule<<#=obj.Name#>,<#=ContextName#>>());
+		<# } #>
+        OnCreated();
+	}
+   
+    <# foreach(EAEntity obj in Container.ActiveEntities) { #>
+		protected virtual void Set<#= obj.Name #>Rules(EntityPropertyRulesCreator<<#=obj.Name#>,<#=ContextName#>> c){
+				c.SetFullControl( y=> x=> true);
+				c.SetDelete(c.NotSupportedRule);
+				c.SetProperty( 
+					SerializeMode.ReadWrite,
+					<#= string.Join(",\r\n\t\t", obj.Properties.Select(p=> "x => x." +  p.Name) ) #>
+					);
+		}
+	<# } #>
+
+   }
+
+   #endregion
+   
+}
+
+ <#+
+	public EAContainer Container {get; set;}
+	
+	public String ContextName{
+		get{
+			return Container.Name + "Context";
+		}
+	}
+	
+	private String ToPrivate(String text)
+	{
+		return "_" + text;
+	}
+	
+	private string GetIdentityString(EAEntity obj){
+		EAEntityProperty p = obj.Properties.First(x=>x.IsPrimary);
+		return p.Name;
+	}
+	
+	private String ToStringConvertor(EAEntityProperty property)
+	{
+		if(property.IsNullable)
+		{
+			return "true";
+		}
+		else
+			return "false";
+	}
+	public String WriterMetadataAttributes(EAEntityProperty p)
+	{
+		StringBuilder sb = new StringBuilder();
+		if(!string.IsNullOrWhiteSpace(p.Label))
+		{
+			sb.AppendLine("[System.ComponentModel.DataAnnotations.Display(Name=\"" + p.Label + "\")]");
+		}
+		if(p.IsRequired)
+		{
+			sb.AppendLine("[System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings =true)]");
+		}
+		if(p.StartRange != p.EndRange)
+		{
+			sb.AppendFormat("[System.ComponentModel.DataAnnotations.Range({0}, {1})]\r\n", p.StartRange,p.EndRange);
+		}
+		if(!string.IsNullOrWhiteSpace(p.RegularExpression))
+		{
+			sb.AppendFormat("[System.ComponentModel.DataAnnotations.RegularExpression(@\"{0}\")]\r\n", p.RegularExpression);
+		}
+		if(p.Length>0){
+			sb.AppendFormat("[System.ComponentModel.DataAnnotations.StringLength({0}, ErrorMessage=@\"{1}.{2} cannot exceed {0} characters\")]\r\n", p.Length,p.ObjectName, p.Name);
+		}
+		return sb.ToString();
+	}
+
+	
+#>

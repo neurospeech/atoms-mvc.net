@@ -1,0 +1,7 @@
+﻿
+<#
+
+	string connectionString = "data source=(localdb)\\ProjectsV12;initial catalog=CrmPrompt;integrated security=True;MultipleActiveResultSets=True;App=EntityFramework";
+	//string connectionString = "Data Source=s800;Initial Catalog=Casting800;Integrated Security=True;MultipleActiveResultSets=True;Application Name=EntityFramework";
+
+#>
