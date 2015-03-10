@@ -30,7 +30,12 @@ How about similar firewall rules for Entity Framework based on current user that
      // assuming db.UserID has value of current logged in User
 
      public class UserSecurityContext : BaseSecurityContext<CompanyDbContext>{
-          public UserSecurityContext(){
+     
+          // You should only use singleton instance
+          // for performance reasons
+          public static UserSecurityContext Instance = new UserSecurityContext();
+     
+          private UserSecurityContext(){
               SetWebUserRule(CreateRule<WebUser>());
               SetMessageRule(CreateRule<Message>());
           }
@@ -80,6 +85,25 @@ How about similar firewall rules for Entity Framework based on current user that
 
      }
 
+Usage
+-----
+      using(ModelDbContext db = new ModelDbContext()){
+          
+          // db.SecurityContext is null by default
+          // all operations are executed without any security
+          
+          db.SecurityContext = UserSecurityContext.Instance;
+          // set current user id
+          db.UserID = 2;
+          
+          // security context rules are automatically applied here
+          var user = db.Query<WebUser>().FirstOrDefault();
+          // try to modify password
+          user.Password = "password";
+          
+          // raises an exception saying password cannot be modified
+          db.SaveChanges();
+      }
 
 How does it work?
 -----------------
