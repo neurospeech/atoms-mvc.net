@@ -8,10 +8,12 @@ Problem Definition
 3. Trying to write base classes to extract common functionalities found in problem defition #2.
 4. Finally repeating business logic in each of methods as well.
 
+
 Goal
 ----
 Our goal was to reduce number of methods, write one and only one simple business logic per entity 
-and create a database "Firewall".
+and create a database "Firewall" referred as "SecurityContext" which allows specifiying access rules in the 
+form of LINQ and you can also load them dynamically from database.
 
 Database Firewall?
 ------------------
@@ -21,6 +23,8 @@ Let's review Firewall rules.
      INCOMING PORT 443 ALLOW
      INCOMING PORT * DISALLOW
 
+Security Context
+----------------
 How about similar firewall rules for Entity Framework based on current user that is logged in.
 
      // assuming db.UserID has value of current logged in User
