@@ -168,13 +168,28 @@ This is for reference, this happens automatically as a part of validation logic,
 Entity Controller for Mvc
 =========================
 
+          [ValidateInput(false)]
+          public class EntityController : AtomEntityController<CompanyDbContext> {
+               
+               protected void OnInitialized(){
+                    base.OnInitialized();
+                    
+                    // set security context...
+                    Repository.SecurityContext = 
+                         UserSecurityContext.Instance;
+               }
+          }
+          
+You can either set SecurityContext in initialization or after authentication, based on your choice. However, by default
+HttpContext.Items["Repository"] and HttpContext.Items["SecurityContext"] are used to initialize all controllers.
+
 Setup Route
 -----------
 
             context.MapRoute(
                 "App_entity",
                 "App/Entity/{table}/{action}",
-                new { controller = "Entity", action = "Query" },
+                new { controller = "EntityController", action = "Query" },
                 new string[] { "MyApp.Areas.App.Controllers" }
             );
 
