@@ -1,6 +1,18 @@
 ASP.NET MVC REST Extensions
 ===========================
 
+Features
+---------
+1. Database Firewall based on User Role
+2. Full async support
+3. Support for property level read/write access
+4. JSON Query Syntax
+5. Dynamic DTO (No more DTO designing)
+6. Dynamic DTO based on user roles
+7. Full CRUD support with inbuilt security
+8. Advanced JSON Serialization
+9. Support for bulk entity edit
+
 Problem Definition
 ------------------
 1. Too many DTOs (Data Transfer Objects) combinations based on different user roles and different semantics.
@@ -255,3 +267,25 @@ Example Queries
 Each of query is filtered upon existing Security Context rules, and 
 properties are returned only on the basis of Read access, so you do not have to
 write or worry about any DTOs anymore.
+
+Save Method
+-----------
+
+Post method expects a named parameter called "formValue" and which contains JSON Serialized text.
+This benefits adding mime attachments as separate form field.
+
+$id refers to primary key value for search.
+
+    POST /app/entity/message/save
+    formModel={ $id:2, 'UserName': 'NewValue' }
+
+Bulk Save Method
+-----------
+
+Post method expects a named parameter called "formValue" and which contains JSON Serialized text.
+This benefits adding mime attachments as separate form field.
+
+$id refers to primary key value for search.
+
+    POST /app/entity/message/bulksave
+    formModel={ $ids:'2,4,5', 'UserName': 'NewValue' }
