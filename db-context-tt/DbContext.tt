@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ template debug="false" hostspecific="true" language="C#" #>
 <#@ output extension=".cs" #>
 <#@  include file="Atoms.Entity.ttinclude" #>
 <#@  include file="ConnectionString.ttinclude" #>
@@ -17,10 +17,10 @@
 	Container = new EAContainer();
 	Container.ConnectionString = connectionString;
 	Container.Provider = "System.Data.SqlClient";
-	Container.Name = "CrmPrompt";
-	Container.Namespace = "CrmApp.Models";
-	Container.ContainerName = "CrmPrompt";
-	Container.IgnoreTables = "sysdiagrams,audititems";
+	Container.Name = "DbModel";
+	Container.Namespace = "DbModelApp.Models";
+	Container.ContainerName = "DbModel";
+	Container.IgnoreTables = "sysdiagrams,audits";
 
 	Container.Refresh();
 #>
@@ -141,8 +141,6 @@ namespace <#= Container.Namespace #>
 		[EntityProperty(true)]
 		<# } else { #>
 		[EntityProperty(false)]
-		[XmlIgnore]
-		[System.Web.Script.Serialization.ScriptIgnore]
 		<# } #>
 		<# if(item.IsIdentity){ #>
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -188,7 +186,13 @@ namespace <#= Container.Namespace #>
             get;
             set;		
 		}<# } else {  #>				
+
+        <#                if(item.Multiplicity == EAMultiplicity.One || item.OtherNavigationProperty.Multiplicity == EAMultiplicity.Many) {#>
+<#                    if(item.Multiplicity == EAMultiplicity.One){ #> 
+        [Required]
+<#                    } #>
 		[ForeignKey("<#= item.SelfProperty.Name #>")]
+        <#                } #>
 		public virtual <#= item.Type #> <#= item.Name #>
 		{
             get;
