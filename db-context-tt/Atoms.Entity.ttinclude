@@ -1,4 +1,4 @@
-﻿
+
 <#@ assembly name="System.Data.Entity" #>
 <#@ assembly name="System.Xml" #>
 <#@ assembly name="System.Xml.Linq" #>
@@ -25,65 +25,65 @@
 		private static Dictionary<string,string> Singlulars;
 		private static Dictionary<string,string> Plurals;
 
-        private AtomPluralService ()
-        {
+		private AtomPluralService ()
+		{
 			Singlulars  = new Dictionary<string,string>();
 			Plurals = new Dictionary<string,string>();
 			Add("case","cases");
-        }
+		}
 
 		private static char[] vowels = new char[] { 'a','e','i','o','u' };
 
-        #region private string ToPlural(string p)
-        public static string ToPlural(string p)
-        {
+		#region private string ToPlural(string p)
+		public static string ToPlural(string p)
+		{
 
 			string r = null;
 			if(Singlulars.TryGetValue(p, out r))
 				return r;
 
-            if (string.IsNullOrWhiteSpace(p))
-                return p;
+			if (string.IsNullOrWhiteSpace(p))
+				return p;
 
-            if (p.EndsWith("y"))
-            {
-                char ch = p[p.Length - 2];
-                ch = char.ToLower(ch);
-                if (vowels.Contains(ch)) {
-                    return p + "s";
-                }
-                return p.Substring(0, p.Length - 1) + "ies";
-            }
-            if (p.EndsWith("x") || p.EndsWith("s"))
-                return p + "es";
-            if (p.EndsWith("es"))
-                return p;
-            return p + "s";
-        }
+			if (p.EndsWith("y"))
+			{
+				char ch = p[p.Length - 2];
+				ch = char.ToLower(ch);
+				if (vowels.Contains(ch)) {
+					return p + "s";
+				}
+				return p.Substring(0, p.Length - 1) + "ies";
+			}
+			if (p.EndsWith("x") || p.EndsWith("s"))
+				return p + "es";
+			if (p.EndsWith("es"))
+				return p;
+			return p + "s";
+		}
 		#endregion
 
-        public static string ToSingular(string tableName)
-        {
+		public static string ToSingular(string tableName)
+		{
 			string r = null;
 			if(Plurals.TryGetValue(tableName,out r))
 				return r;
-            if (tableName.EndsWith("ies"))
-                return tableName.Substring(0, tableName.Length - 3) + "y";
-            if (tableName.EndsWith("xes"))
-                return tableName.Substring(0, tableName.Length - 2);
-            if (tableName.EndsWith("s"))
-                return tableName.Substring(0, tableName.Length - 1);
-            return tableName;
-        }
+			if (tableName.EndsWith("ies"))
+				return tableName.Substring(0, tableName.Length - 3) + "y";
+			if (tableName.EndsWith("xes"))
+				return tableName.Substring(0, tableName.Length - 2);
+			if (tableName.EndsWith("s"))
+				return tableName.Substring(0, tableName.Length - 1);
+			return tableName;
+		}
 
 	}
 
 
 	#region EABaseObject
 	public class EABaseObject{
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string Summary { get; set; }
+		public string Name { get; set; }
+		public string Description { get; set; }
+		public string Summary { get; set; }
 		public object Parent {get;set;}
 		public object Document {get;set;}
 	}
@@ -91,689 +91,689 @@
 
 	#region EAAssociation
 	public class EAAssociation : EABaseObject{
-        public string PrimaryTable { get; set; }
+		public string PrimaryTable { get; set; }
 
-        public string PrimaryColumn { get; set; }
+		public string PrimaryColumn { get; set; }
 
-        public string DependentTable { get; set; }
+		public string DependentTable { get; set; }
 
-        public string DependentColumn { get; set; }
+		public string DependentColumn { get; set; }
 
-        public bool IsDependentNullbable { get; set;}
+		public bool IsDependentNullbable { get; set;}
 
-        public bool IsDependentPrimary {
-            get;
-            set ;
-        }
+		public bool IsDependentPrimary {
+			get;
+			set ;
+		}
 
-        public string DeleteAction {
-            get ;
-            set ;
-        }
+		public string DeleteAction {
+			get ;
+			set ;
+		}
 
-        public string UpdateAction
-        {
-            get;
+		public string UpdateAction
+		{
+			get;
 			set;
-        }
-        
-        public string PrincipalRole
-        {
-            get
-            {
-                return PrimaryTable + PrimaryColumn;
-            }
-            set
-            {
-                
-            }
-        }
+		}
+		
+		public string PrincipalRole
+		{
+			get
+			{
+				return PrimaryTable + PrimaryColumn;
+			}
+			set
+			{
+				
+			}
+		}
 
-        public string DependentRole
-        {
-            get
-            {
-                return DependentTable + DependentColumn;
-            }
-            set
-            {
+		public string DependentRole
+		{
+			get
+			{
+				return DependentTable + DependentColumn;
+			}
+			set
+			{
 
-            }
-        }
+			}
+		}
 
-        public string PrincipalType
-        {
-            get;
-            set;
-        }
+		public string PrincipalType
+		{
+			get;
+			set;
+		}
 
-        public string DependentType
-        {
-            get;
-            set;
-        }
+		public string DependentType
+		{
+			get;
+			set;
+		}
 	}
 #endregion
 
 	#region EAEntity
-    public class EAEntity : EABaseObject
-    {
+	public class EAEntity : EABaseObject
+	{
 
-        public EAEntity()
-        {
-            
-        }
+		public EAEntity()
+		{
+			
+		}
 
-        public string BaseType
-        {
-            get;
-            set;
-        }
+		public string BaseType
+		{
+			get;
+			set;
+		}
 
-        public bool Include {
-            get;
-            set;
-        }
+		public bool Include {
+			get;
+			set;
+		}
 
 
-        public string TableName {
-            get ;
-            set ;
-        }
+		public string TableName {
+			get ;
+			set ;
+		}
 
-        public string EntitySet
-        {
-            get
-            {
-                return EAContainerBuilder.ToPlural(Name);
-            }
-        }
+		public string EntitySet
+		{
+			get
+			{
+				return EAContainerBuilder.ToPlural(Name);
+			}
+		}
 
-        public string Schema
-        {
-            get;
-            set;
-        }
+		public string Schema
+		{
+			get;
+			set;
+		}
 
-        public IEnumerable<EAEntityProperty> ActiveProperties
-        {
-            get
-            {
-                return Properties.Where(x => x.IsActive);
-            }
-        }
+		public IEnumerable<EAEntityProperty> ActiveProperties
+		{
+			get
+			{
+				return Properties.Where(x => x.IsActive);
+			}
+		}
 
 		private EAEntityPropertyCollection _Properties = new EAEntityPropertyCollection();
-        public EAEntityPropertyCollection Properties
-        {
-            get {
-                return _Properties;
-            }
-        }
+		public EAEntityPropertyCollection Properties
+		{
+			get {
+				return _Properties;
+			}
+		}
 
 		private EANavigationPropertyCollection _NavigationProperties = new EANavigationPropertyCollection();
-        public EANavigationPropertyCollection NavigationProperties
-        {
-            get {
-                return _NavigationProperties;
-            }
-        }
+		public EANavigationPropertyCollection NavigationProperties
+		{
+			get {
+				return _NavigationProperties;
+			}
+		}
 
-        public IEnumerable<EANavigationProperty> ParentProperties
-        {
-            get
-            {
-                return NavigationProperties.Where(x => x.Multiplicity != EAMultiplicity.Many);
-            }
-        }
+		public IEnumerable<EANavigationProperty> ParentProperties
+		{
+			get
+			{
+				return NavigationProperties.Where(x => x.Multiplicity != EAMultiplicity.Many);
+			}
+		}
 
-        public IEnumerable<EANavigationProperty> ChildProperties
-        {
-            get
-            {
-                return NavigationProperties.Where(x => x.Multiplicity == EAMultiplicity.Many);
-            }
-        }
+		public IEnumerable<EANavigationProperty> ChildProperties
+		{
+			get
+			{
+				return NavigationProperties.Where(x => x.Multiplicity == EAMultiplicity.Many);
+			}
+		}
 
-       
-    }
+	   
+	}
 	#endregion
 
 	#region EAContainer
-    public class EAContainer : EABaseObject
-    {
+	public class EAContainer : EABaseObject
+	{
 
-        public EAContainer()
-        {
-            this.Provider = "System.Data.SqlClient";
-            this.PluralTableNames = true;
-            this.IgnoreTables = "sysdiagram";
-            this.Name = "Model";
-            this.ContainerName = "ModelEntities";
-            this.Namespace = "Model.Web";
-        }
+		public EAContainer()
+		{
+			this.Provider = "System.Data.SqlClient";
+			this.PluralTableNames = true;
+			this.IgnoreTables = "sysdiagram";
+			this.Name = "Model";
+			this.ContainerName = "ModelEntities";
+			this.Namespace = "Model.Web";
+		}
 
-        public string ContainerName
-        {
-            get;
-            set;
-        }
+		public string ContainerName
+		{
+			get;
+			set;
+		}
 
 		private EAEntityCollection _Entities = new EAEntityCollection();
-        public EAEntityCollection Entities {
-            get {
-                return _Entities;
-            }
-        }
+		public EAEntityCollection Entities {
+			get {
+				return _Entities;
+			}
+		}
 
 
-        public IEnumerable<EAEntity> ActiveEntities
-        {
-            get
-            {
-                return Entities.Where(x => x.Include);
-            }
-        }
+		public IEnumerable<EAEntity> ActiveEntities
+		{
+			get
+			{
+				return Entities.Where(x => x.Include);
+			}
+		}
 
 		private EAAssociationCollection _Associations = new EAAssociationCollection();
-        public EAAssociationCollection Associations
-        {
-            get {
-                return _Associations;
-            }
-        }
+		public EAAssociationCollection Associations
+		{
+			get {
+				return _Associations;
+			}
+		}
 
-        public string Namespace { 
-            get;
-            set;
-        }
+		public string Namespace { 
+			get;
+			set;
+		}
 
 
-        public string ConnectionString
-        {
-            get;
-            set;
-        }
+		public string ConnectionString
+		{
+			get;
+			set;
+		}
 
-        public string IgnoreTables {
-            get;
-            set;
-        }
+		public string IgnoreTables {
+			get;
+			set;
+		}
 
-        public string Provider
-        {
-            get;
-            set;
-        }
+		public string Provider
+		{
+			get;
+			set;
+		}
 
-        public bool PluralTableNames
-        {
-            get ;
-            set;
-        }
+		public bool PluralTableNames
+		{
+			get ;
+			set;
+		}
 
-        public void Refresh() {
-            EAContainerBuilder builder = EAContainerBuilder.GetBuilder(this);
-            builder.Refresh();
-        }
+		public void Refresh() {
+			EAContainerBuilder builder = EAContainerBuilder.GetBuilder(this);
+			builder.Refresh();
+		}
 
-    }
+	}
 	#endregion
 
-    public class EAEntityCollection : List<EAEntity> {
-    }
+	public class EAEntityCollection : List<EAEntity> {
+	}
 
 
-    public class EAAssociationCollection : List<EAAssociation> {
-    }
+	public class EAAssociationCollection : List<EAAssociation> {
+	}
 
 
-    public class EAEntityProperty : EABaseObject
-    {
+	public class EAEntityProperty : EABaseObject
+	{
 
 
-        #region public override string  ToString()
-        public override string ToString()
-        {
-            return ObjectName + "." + Name;
-        }
-        #endregion
+		#region public override string  ToString()
+		public override string ToString()
+		{
+			return ObjectName + "." + Name;
+		}
+		#endregion
 
-        public PrimitiveTypeKind EdmType
-        {
-            get;
-            set;
-        }
+		public PrimitiveTypeKind EdmType
+		{
+			get;
+			set;
+		}
 
-        public bool? Unicode {
-            get;
-            set;
-        }
+		public bool? Unicode {
+			get;
+			set;
+		}
 
-        public byte? Precision
-        {
-            get;
-            set;
-        }
+		public byte? Precision
+		{
+			get;
+			set;
+		}
 
-        public byte? Scale
-        {
-            get;
-            set;
-        }
+		public byte? Scale
+		{
+			get;
+			set;
+		}
 
 
-        public bool IsNullable
-        {
-            get;
-            set;
-        }
+		public bool IsNullable
+		{
+			get;
+			set;
+		}
 
-        public bool Serialize
-        {
-            get;
-            set;
-        }
+		public bool Serialize
+		{
+			get;
+			set;
+		}
 
-        // used for validation...
-        public string DataType
-        {
-            get;
-            set;
-        }
+		// used for validation...
+		public string DataType
+		{
+			get;
+			set;
+		}
 
-        public decimal Length {
-            get;
-            set;
-        }
+		public decimal Length {
+			get;
+			set;
+		}
 
-        public string FieldName {
-            get;
-            set;
-        }
+		public string FieldName {
+			get;
+			set;
+		}
 
 		/// <summary>
 		/// Database Field Type (Native Database Type)
 		/// </summary>
-        public string FieldType {
-            get;
-            set;
-        }
+		public string FieldType {
+			get;
+			set;
+		}
 
-        public bool IsActive {
-            get;
-            set;
-        }
+		public bool IsActive {
+			get;
+			set;
+		}
 
-        public bool IsRequired {
-            get;
-            set;
-        }
+		public bool IsRequired {
+			get;
+			set;
+		}
 
-        public bool IsIdentity { 
-            get;
-            set;
-        }
+		public bool IsIdentity { 
+			get;
+			set;
+		}
 
-        public bool IsPrimary { 
-            get;
-            set;
-        }
-
-
-        public string Label
-        {
-            get;
-            set;
-        }
-
-        public string Default {
-            get;
-            set;
-        }
+		public bool IsPrimary { 
+			get;
+			set;
+		}
 
 
-        public decimal StartRange
-        {
-            get;
-            set;
-        }
+		public string Label
+		{
+			get;
+			set;
+		}
 
-        public decimal EndRange
-        {
-            get;
-            set;
-        }
+		public string Default {
+			get;
+			set;
+		}
 
-        public string RegularExpression
-        {
-            get;
-            set;
-        }
 
-        public string Scaffold 
-        {
-            get;
-            set;
-        }
+		public decimal StartRange
+		{
+			get;
+			set;
+		}
 
-        public string ObjectName
-        {
-            get
-            {
-                EAEntity p = (Parent as EAEntity);
-                if (p == null)
-                    return null;
-                return p.Name;
-            }
-        }
+		public decimal EndRange
+		{
+			get;
+			set;
+		}
 
-        public bool Indexed { 
-            get;
-            set;
-        }
+		public string RegularExpression
+		{
+			get;
+			set;
+		}
 
-        public EAEntityProperty RelatedProperty
-        {
-            get
-            {
-                EAEntity obj = this.Parent as EAEntity;
+		public string Scaffold 
+		{
+			get;
+			set;
+		}
 
-                EAContainer c = this.Document as EAContainer;
+		public string ObjectName
+		{
+			get
+			{
+				EAEntity p = (Parent as EAEntity);
+				if (p == null)
+					return null;
+				return p.Name;
+			}
+		}
 
-                foreach (var np in obj.NavigationProperties)
-                {
-                    EAAssociation a = c.Associations.FirstOrDefault(
-                        x => x.Name == np.Association &&
-                        (x.DependentColumn == this.FieldName &&
-                            x.DependentTable == obj.TableName
-                        )
-                        );
-                    if (a == null)
-                        continue;
-                    EAEntity pObject = c.Entities.First(x => x.TableName == a.PrimaryTable);
-                    EAEntityProperty p = pObject.Properties.First(x => x.FieldName == a.PrimaryColumn);
-                    return p;
-                }
-                return null;
+		public bool Indexed { 
+			get;
+			set;
+		}
 
-            }
-        }
+		public EAEntityProperty RelatedProperty
+		{
+			get
+			{
+				EAEntity obj = this.Parent as EAEntity;
 
-        public EANavigationProperty NavigationProperty
-        {
-            get
-            {
-                EAEntity obj = this.Parent as EAEntity;
+				EAContainer c = this.Document as EAContainer;
 
-                EAContainer c = this.Document as EAContainer;
+				foreach (var np in obj.NavigationProperties)
+				{
+					EAAssociation a = c.Associations.FirstOrDefault(
+						x => x.Name == np.Association &&
+						(x.DependentColumn == this.FieldName &&
+							x.DependentTable == obj.TableName
+						)
+						);
+					if (a == null)
+						continue;
+					EAEntity pObject = c.Entities.First(x => x.TableName == a.PrimaryTable);
+					EAEntityProperty p = pObject.Properties.First(x => x.FieldName == a.PrimaryColumn);
+					return p;
+				}
+				return null;
 
-                foreach (var np in obj.NavigationProperties)
-                {
-                    EAAssociation a = c.Associations.FirstOrDefault(
-                        x => x.Name == np.Association &&
-                           
-                            x.DependentRole==np.FromRole &&
-                        (x.DependentColumn == this.FieldName &&
-                            x.DependentTable == obj.TableName
-                        ));
-                    if (a == null)
-                        continue;
-                    return np;
-                }
-                return null;
-            }
-        }
+			}
+		}
 
-        public List<EAEntityProperty> RelatedProperties
-        {
-            get
-            {
-                List<EAEntityProperty> list = new List<EAEntityProperty>();
-                EAEntity obj = this.Parent as EAEntity;
+		public EANavigationProperty NavigationProperty
+		{
+			get
+			{
+				EAEntity obj = this.Parent as EAEntity;
 
-                EAContainer c = this.Document as EAContainer;
+				EAContainer c = this.Document as EAContainer;
 
-                foreach (var np in obj.NavigationProperties)
-                {
-                    EAAssociation a = c.Associations.FirstOrDefault(
-                        x => x.Name == np.Association && 
-                        (x.DependentColumn== this.FieldName && 
-                            x.DependentTable== obj.TableName
-                        )
-                        );
-                    if (a == null)
-                        continue;
-                    //if (np.FromRole == a.DependentRole)
-                    {
-                        EAEntity pObject = c.Entities.First(x => x.TableName == a.PrimaryTable);
-                        EAEntityProperty p = pObject.Properties.First(x => x.FieldName == a.PrimaryColumn);
-                        if(!list.Contains(p))
-                        list.Add(p);
-                    }
-                }
-                return list;
-            }
-        }
-    } 
+				foreach (var np in obj.NavigationProperties)
+				{
+					EAAssociation a = c.Associations.FirstOrDefault(
+						x => x.Name == np.Association &&
+						   
+							x.DependentRole==np.FromRole &&
+						(x.DependentColumn == this.FieldName &&
+							x.DependentTable == obj.TableName
+						));
+					if (a == null)
+						continue;
+					return np;
+				}
+				return null;
+			}
+		}
+
+		public List<EAEntityProperty> RelatedProperties
+		{
+			get
+			{
+				List<EAEntityProperty> list = new List<EAEntityProperty>();
+				EAEntity obj = this.Parent as EAEntity;
+
+				EAContainer c = this.Document as EAContainer;
+
+				foreach (var np in obj.NavigationProperties)
+				{
+					EAAssociation a = c.Associations.FirstOrDefault(
+						x => x.Name == np.Association && 
+						(x.DependentColumn== this.FieldName && 
+							x.DependentTable== obj.TableName
+						)
+						);
+					if (a == null)
+						continue;
+					//if (np.FromRole == a.DependentRole)
+					{
+						EAEntity pObject = c.Entities.First(x => x.TableName == a.PrimaryTable);
+						EAEntityProperty p = pObject.Properties.First(x => x.FieldName == a.PrimaryColumn);
+						if(!list.Contains(p))
+						list.Add(p);
+					}
+				}
+				return list;
+			}
+		}
+	} 
 
 	public class EAEntityPropertyCollection : List<EAEntityProperty>{}
 
 
-    public class EANavigationProperty : EABaseObject
-    {
+	public class EANavigationProperty : EABaseObject
+	{
 
-        public bool Include {
-            get;
-            set;
-        }
+		public bool Include {
+			get;
+			set;
+		}
 
-        public bool VerifyID {
-            get;
-            set;
-        }
+		public bool VerifyID {
+			get;
+			set;
+		}
 
-        public bool CascadeDelete
-        {
-            get;
-            set;
-        }
+		public bool CascadeDelete
+		{
+			get;
+			set;
+		}
 
-        public bool PreventDelete
-        {
-            get;
-            set;
-        }
+		public bool PreventDelete
+		{
+			get;
+			set;
+		}
 
-        public string Type {
-            get;
-            set;
-        }
+		public string Type {
+			get;
+			set;
+		}
 
-        public string Association {
-            get;
-            set;
-        }
+		public string Association {
+			get;
+			set;
+		}
 
-        public EAMultiplicity Multiplicity
-        { 
-            get;
-            set;
-        }
+		public EAMultiplicity Multiplicity
+		{ 
+			get;
+			set;
+		}
 
-        public string ToRole
-        {
-            get;
-            set;
-        }
+		public string ToRole
+		{
+			get;
+			set;
+		}
 
-        public string FromRole
-        {
-            get;
-            set;
-        }
+		public string FromRole
+		{
+			get;
+			set;
+		}
 
-        public EAEntityProperty SelfProperty
-        {
-            get
-            {
-                EAEntity obj = this.Parent as EAEntity;
+		public EAEntityProperty SelfProperty
+		{
+			get
+			{
+				EAEntity obj = this.Parent as EAEntity;
 
-                EAContainer c = this.Document as EAContainer;
+				EAContainer c = this.Document as EAContainer;
 
-                EAAssociation a = c.Associations.First(x => x.Name == Association);
+				EAAssociation a = c.Associations.First(x => x.Name == Association);
 
-                String f = null;
+				String f = null;
 
-                if (a.PrincipalRole == FromRole)
-                {
-                    f = a.PrimaryColumn;
-                }
-                else
-                {
-                    f = a.DependentColumn;
-                }
+				if (a.PrincipalRole == FromRole)
+				{
+					f = a.PrimaryColumn;
+				}
+				else
+				{
+					f = a.DependentColumn;
+				}
 
-                return obj.Properties.First(x => x.FieldName == f);
-            }
-        }
-
-
-        public EAEntityProperty OtherProperty
-        {
-            get
-            {
-                EAEntity obj = this.Parent as EAEntity;
-
-                EAContainer c = this.Document as EAContainer;
-
-                EAAssociation a = c.Associations.First(x => x.Name == Association);
-
-                String f = null;
-                String t = null;
-
-                if (a.PrincipalRole == ToRole)
-                {
-                    f = a.PrimaryColumn;
-                    t = a.PrimaryTable;
-                }
-                else
-                {
-                    f = a.DependentColumn;
-                    t = a.DependentTable;
-                }
-
-                obj = c.Entities.First(x => x.TableName == t);
-
-                return obj.Properties.First(x => x.FieldName == f);
-            }
-        }
-
-        public bool ZeroOrOneToOne
-        {
-            get
-            {
-                return this.Multiplicity == EAMultiplicity.ZeroOrOne && this.OtherNavigationProperty.Multiplicity == EAMultiplicity.One;
-            }
-        }
-        public bool OneToZeroOrOne
-        {
-            get
-            {
-                return this.Multiplicity == EAMultiplicity.One && this.OtherNavigationProperty.Multiplicity == EAMultiplicity.ZeroOrOne;
-            }
-        }
-
-        public bool OneToMany
-        {
-            get
-            {
-                return this.Multiplicity == EAMultiplicity.One && this.OtherNavigationProperty.Multiplicity == EAMultiplicity.Many;
-            }
-        }
-
-        public bool ZeroOrOneToMany
-        {
-            get
-            {
-                return this.Multiplicity == EAMultiplicity.ZeroOrOne && this.OtherNavigationProperty.Multiplicity == EAMultiplicity.Many;
-            }
-        }
+				return obj.Properties.First(x => x.FieldName == f);
+			}
+		}
 
 
-        public EANavigationProperty OtherNavigationProperty
-        {
-            get
-            {
-                EAEntity obj = this.Parent as EAEntity;
+		public EAEntityProperty OtherProperty
+		{
+			get
+			{
+				EAEntity obj = this.Parent as EAEntity;
 
-                EAContainer c = this.Document as EAContainer;
+				EAContainer c = this.Document as EAContainer;
 
-                EAAssociation a = c.Associations.First(x => x.Name == Association);
+				EAAssociation a = c.Associations.First(x => x.Name == Association);
 
-                String fr = null;
-                string tr = null;
-                String t = null;
+				String f = null;
+				String t = null;
 
-                if (a.DependentRole == FromRole)
-                {
-                    fr = a.PrincipalRole;
-                    tr = a.DependentRole;
-                    t = a.PrimaryTable;
-                }
-                else
-                {
-                    fr = a.DependentRole;
-                    tr = a.PrincipalRole;
-                    t = a.DependentTable;
-                }
+				if (a.PrincipalRole == ToRole)
+				{
+					f = a.PrimaryColumn;
+					t = a.PrimaryTable;
+				}
+				else
+				{
+					f = a.DependentColumn;
+					t = a.DependentTable;
+				}
 
-                obj = c.Entities.First(x => x.TableName == t);
+				obj = c.Entities.First(x => x.TableName == t);
 
-                return obj.NavigationProperties.First(x => x.FromRole == fr && x.ToRole==tr);
-            }
-        }
+				return obj.Properties.First(x => x.FieldName == f);
+			}
+		}
 
-    }
+		public bool ZeroOrOneToOne
+		{
+			get
+			{
+				return this.Multiplicity == EAMultiplicity.ZeroOrOne && this.OtherNavigationProperty.Multiplicity == EAMultiplicity.One;
+			}
+		}
+		public bool OneToZeroOrOne
+		{
+			get
+			{
+				return this.Multiplicity == EAMultiplicity.One && this.OtherNavigationProperty.Multiplicity == EAMultiplicity.ZeroOrOne;
+			}
+		}
 
-    public enum EAMultiplicity : int { 
-        None = 0,
-        ZeroOrOne = 1,
-        One = 2,
-        Many = 3
-    }
+		public bool OneToMany
+		{
+			get
+			{
+				return this.Multiplicity == EAMultiplicity.One && this.OtherNavigationProperty.Multiplicity == EAMultiplicity.Many;
+			}
+		}
+
+		public bool ZeroOrOneToMany
+		{
+			get
+			{
+				return this.Multiplicity == EAMultiplicity.ZeroOrOne && this.OtherNavigationProperty.Multiplicity == EAMultiplicity.Many;
+			}
+		}
+
+
+		public EANavigationProperty OtherNavigationProperty
+		{
+			get
+			{
+				EAEntity obj = this.Parent as EAEntity;
+
+				EAContainer c = this.Document as EAContainer;
+
+				EAAssociation a = c.Associations.First(x => x.Name == Association);
+
+				String fr = null;
+				string tr = null;
+				String t = null;
+
+				if (a.DependentRole == FromRole)
+				{
+					fr = a.PrincipalRole;
+					tr = a.DependentRole;
+					t = a.PrimaryTable;
+				}
+				else
+				{
+					fr = a.DependentRole;
+					tr = a.PrincipalRole;
+					t = a.DependentTable;
+				}
+
+				obj = c.Entities.First(x => x.TableName == t);
+
+				return obj.NavigationProperties.First(x => x.FromRole == fr && x.ToRole==tr);
+			}
+		}
+
+	}
+
+	public enum EAMultiplicity : int { 
+		None = 0,
+		ZeroOrOne = 1,
+		One = 2,
+		Many = 3
+	}
 
 	public class EANavigationPropertyCollection : List<EANavigationProperty>{}
 
 	public static class AtomEdmHelper
 	{
 
-        public static bool? IsUnicode(EdmProperty property)
-        {
-            TypeUsage type = property.TypeUsage;
-            Facet facet = type.Facets.FirstOrDefault(x => x.Name == "Unicode");
-            if (facet == null)
-                return null;
-            return (bool)facet.Value;
-        }
+		public static bool? IsUnicode(EdmProperty property)
+		{
+			TypeUsage type = property.TypeUsage;
+			Facet facet = type.Facets.FirstOrDefault(x => x.Name == "Unicode");
+			if (facet == null)
+				return null;
+			return (bool)facet.Value;
+		}
 
-        public static byte? IsPrecision(EdmProperty property)
-        {
-            TypeUsage type = property.TypeUsage;
-            Facet facet = type.Facets.FirstOrDefault(x => x.Name == "Precision");
-            if (facet== null)
-                return null;
-            return (byte)facet.Value;
-        }
+		public static byte? IsPrecision(EdmProperty property)
+		{
+			TypeUsage type = property.TypeUsage;
+			Facet facet = type.Facets.FirstOrDefault(x => x.Name == "Precision");
+			if (facet== null)
+				return null;
+			return (byte)facet.Value;
+		}
 
-        public static byte? IsScale(EdmProperty property)
-        {
-            TypeUsage type = property.TypeUsage;
-            Facet facet = type.Facets.FirstOrDefault(x => x.Name == "Scale");
-            if (facet == null)
-                return null;
-            return (byte)facet.Value;
-        }
+		public static byte? IsScale(EdmProperty property)
+		{
+			TypeUsage type = property.TypeUsage;
+			Facet facet = type.Facets.FirstOrDefault(x => x.Name == "Scale");
+			if (facet == null)
+				return null;
+			return (byte)facet.Value;
+		}
 
 
 		public static int GetMaxLength(EdmProperty property) {
@@ -783,18 +783,18 @@
 				return 0;
 			int maxVal =  (int)facet.Value;
 
-            PrimitiveType pt = type.EdmType as PrimitiveType;
-            if (pt == null)
-                return maxVal;
+			PrimitiveType pt = type.EdmType as PrimitiveType;
+			if (pt == null)
+				return maxVal;
 
-            var fd = pt.FacetDescriptions.FirstOrDefault(x => x.FacetName == "MaxLength");
-            if (fd == null)
-                return maxVal;
+			var fd = pt.FacetDescriptions.FirstOrDefault(x => x.FacetName == "MaxLength");
+			if (fd == null)
+				return maxVal;
 
-            if (fd.MaxValue.GetValueOrDefault() == maxVal)
-                return -1;
+			if (fd.MaxValue.GetValueOrDefault() == maxVal)
+				return -1;
 
-            return maxVal;
+			return maxVal;
 		}
 
 		public static string GetDefault(EdmProperty property) {
@@ -810,10 +810,10 @@
 			Facet facet = type.Facets.FirstOrDefault(x=>x.Name == "StoreGeneratedPattern");
 			if (facet == null)
 				return false;
-            if (((StoreGeneratedPattern)facet.Value) == StoreGeneratedPattern.Identity)
-                 return true;
-            System.Diagnostics.Trace.WriteLine(property.Name + "=" + facet.Value);
-            return false;
+			if (((StoreGeneratedPattern)facet.Value) == StoreGeneratedPattern.Identity)
+				 return true;
+			System.Diagnostics.Trace.WriteLine(property.Name + "=" + facet.Value);
+			return false;
 		}
 
 		public static bool IsPrimary(EdmProperty property) {
@@ -825,79 +825,79 @@
 			return (property.TypeUsage.EdmType as PrimitiveType).ClrEquivalentType.FullName;
 		}
 
-        public static PrimitiveTypeKind GetEdmType(EdmProperty property) {
-            return (property.TypeUsage.EdmType as PrimitiveType).PrimitiveTypeKind;
-        }
+		public static PrimitiveTypeKind GetEdmType(EdmProperty property) {
+			return (property.TypeUsage.EdmType as PrimitiveType).PrimitiveTypeKind;
+		}
 	}	
 
 
-    public class EAContainerBuilder
-    {
-        protected string metadataDataType = "data_type";
-        protected string metadataLength = "character_maximum_length";
-        protected string metadataNullable = "is_nullable";
-        protected string metadataIndexName = "INDEX_NAME";
-        protected string metadataColumnName = "column_name";
-        protected string metadataTableName = "table_name";
-        protected string metadataSchema = "table_schema";
+	public class EAContainerBuilder
+	{
+		protected string metadataDataType = "data_type";
+		protected string metadataLength = "character_maximum_length";
+		protected string metadataNullable = "is_nullable";
+		protected string metadataIndexName = "INDEX_NAME";
+		protected string metadataColumnName = "column_name";
+		protected string metadataTableName = "table_name";
+		protected string metadataSchema = "table_schema";
 
-        public EAContainer Container { get; private set; }
+		public EAContainer Container { get; private set; }
 
 		public EntityStoreSchemaGenerator Generator { get; private set; }
 
 
 		/// <summary>
-        /// 
-        /// </summary>
-        /// <param name="container"></param>
-        /// <returns></returns>
-        public static EAContainerBuilder GetBuilder(EAContainer container)
-        {
+		/// 
+		/// </summary>
+		/// <param name="container"></param>
+		/// <returns></returns>
+		public static EAContainerBuilder GetBuilder(EAContainer container)
+		{
 			EntityStoreSchemaGenerator generator = new EntityStoreSchemaGenerator(container.Provider, container.ConnectionString, container.Namespace);
 			EAContainerBuilder b = new EAContainerBuilder();
-            b.Container = container;
-            b.Generator = generator;
-            return b;
-        }
+			b.Container = container;
+			b.Generator = generator;
+			return b;
+		}
 
 
-        #region internal void Refresh(EAContainer eAContainer,string connectionString)
-        public virtual void Refresh()
-        {
+		#region internal void Refresh(EAContainer eAContainer,string connectionString)
+		public virtual void Refresh()
+		{
 			Generator.GenerateForeignKeyProperties = true;
-            List<EntityStoreSchemaFilterEntry> filters = new List<EntityStoreSchemaFilterEntry>();
-            filters.Add(new EntityStoreSchemaFilterEntry(null, null, null, EntityStoreSchemaFilterObjectTypes.All, EntityStoreSchemaFilterEffect.Allow));
+			List<EntityStoreSchemaFilterEntry> filters = new List<EntityStoreSchemaFilterEntry>();
+			filters.Add(new EntityStoreSchemaFilterEntry(null, null, null, EntityStoreSchemaFilterObjectTypes.All, EntityStoreSchemaFilterEffect.Allow));
 			Generator.GenerateStoreMetadata(filters);
 
 			RefreshTables();
-            RefreshAssociations();
-            RefreshNavigationProperties();
-            RefreshNavigationPropertyNames();
+			RefreshAssociations();
+			RefreshNavigationProperties();
+			RefreshNavigationPropertyNames();
 
-        }
-        #endregion
+		}
+		#endregion
 
-        #region private void RefreshNavigationPropertyNames()
-        private void RefreshNavigationPropertyNames()
-        {
-            foreach (EAEntity obj in Container.Entities)
-            {
-                foreach (var item in obj.NavigationProperties.GroupBy(x => x.Name))
-                {
-                    if (item.Count() > 1)
-                    {
-                        int i = 0;
-                        foreach (var g in item)
-                        {
-                            if (i > 0)
-                                g.Name += i.ToString();
-                            i++;
-                        }
-                    }
-                }
+		#region private void RefreshNavigationPropertyNames()
+		private void RefreshNavigationPropertyNames()
+		{
+			foreach (EAEntity obj in Container.Entities)
+			{
+				foreach (var item in obj.NavigationProperties.GroupBy(x => x.Name))
+				{
+					if (item.Count() > 1)
+					{
+						int i = 0;
+						foreach (var g in item)
+						{
+							if (i > 0)
+								g.Name += i.ToString();
+							i++;
+						}
+					}
+				}
 
-                foreach (var item in obj.NavigationProperties)
-                {
+				foreach (var item in obj.NavigationProperties)
+				{
 					// special case of One-ZeroOne Relation
 					if(item.Multiplicity == EAMultiplicity.One && item.OtherNavigationProperty.Multiplicity == EAMultiplicity.ZeroOrOne){
 						item.Name = ((EAEntity)item.OtherNavigationProperty.Parent).Name;
@@ -906,308 +906,308 @@
 						if (item.Name == obj.Name) {
 							item.Name += "Object";
 						}
-                    }
-                }
-            }
-        }
-        #endregion
+					}
+				}
+			}
+		}
+		#endregion
 
 
-        #region private void RefreshNavigationProperties()
-        private void RefreshNavigationProperties()
-        {
-            
+		#region private void RefreshNavigationProperties()
+		private void RefreshNavigationProperties()
+		{
+			
 
-            foreach (EAAssociation item in Container.Associations)
-            {
-                // for every table of primary...
-                EAEntity primaryObject = Container.Entities.FirstOrDefault(x => x.TableName == item.PrimaryTable);
-                EAEntityProperty primaryProperty = primaryObject.Properties.FirstOrDefault(x => x.FieldName == item.PrimaryColumn);
+			foreach (EAAssociation item in Container.Associations)
+			{
+				// for every table of primary...
+				EAEntity primaryObject = Container.Entities.FirstOrDefault(x => x.TableName == item.PrimaryTable);
+				EAEntityProperty primaryProperty = primaryObject.Properties.FirstOrDefault(x => x.FieldName == item.PrimaryColumn);
 
-                EAEntity dependentObject = Container.Entities.FirstOrDefault(x => x.TableName == item.DependentTable);
-                EAEntityProperty dependentProperty = dependentObject.Properties.FirstOrDefault(x => x.FieldName == item.DependentColumn);
+				EAEntity dependentObject = Container.Entities.FirstOrDefault(x => x.TableName == item.DependentTable);
+				EAEntityProperty dependentProperty = dependentObject.Properties.FirstOrDefault(x => x.FieldName == item.DependentColumn);
 
 
-                EANavigationProperty pn = primaryObject.NavigationProperties.FirstOrDefault(
-                    x => x.Association == item.Name && x.FromRole == item.PrincipalRole);
+				EANavigationProperty pn = primaryObject.NavigationProperties.FirstOrDefault(
+					x => x.Association == item.Name && x.FromRole == item.PrincipalRole);
 
-                ClearUnusedProperties(item, primaryObject);
+				ClearUnusedProperties(item, primaryObject);
 
-                ClearUnusedProperties(item, dependentObject);
+				ClearUnusedProperties(item, dependentObject);
 
-                EANavigationProperty dn = dependentObject.NavigationProperties.FirstOrDefault(
-                    x => x.Association == item.Name && x.FromRole== item.DependentRole);
+				EANavigationProperty dn = dependentObject.NavigationProperties.FirstOrDefault(
+					x => x.Association == item.Name && x.FromRole== item.DependentRole);
 
-                bool exists = pn != null && dn != null;
+				bool exists = pn != null && dn != null;
 
-                if (pn == null)
-                {
-                    pn = new EANavigationProperty();
-                    pn.Association = item.Name;
-                    pn.Type = dependentObject.Name;
+				if (pn == null)
+				{
+					pn = new EANavigationProperty();
+					pn.Association = item.Name;
+					pn.Type = dependentObject.Name;
 
-                    string colRefName = GetReferenceName(dependentProperty.FieldName);
-                    if (colRefName != primaryObject.Name)
-                    {
-                        colRefName = dependentObject.Name + colRefName;
-                    }
-                    else
-                    {
-                        colRefName = dependentObject.Name;
-                    }
-                    pn.Name = colRefName;
-                    pn.Multiplicity = IsOnlyPrimary(dependentProperty, dependentObject) ? EAMultiplicity.ZeroOrOne : EAMultiplicity.Many;
-                    if (pn.Multiplicity == EAMultiplicity.Many)
-                    {
-                        pn.Name = ToPlural(pn.Name);
-                        if (dependentObject.Name == primaryObject.Name)
-                        {
-                            if(dependentProperty.FieldName.StartsWith("Parent")){
-                                pn.Name = ToPlural("Child" + dependentObject.Name);
-                            }else{
-                                string n = dependentProperty.Name;
-                                if(n.ToLower().EndsWith("id")){
-                                    n = n.Substring(0,n.Length-2);
-                                }
-                                pn.Name = ToPlural(n + dependentObject.Name);
-                            }
-                        }
-                    }                    
-                    primaryObject.NavigationProperties.Add(pn);
+					string colRefName = GetReferenceName(dependentProperty.FieldName);
+					if (colRefName != primaryObject.Name)
+					{
+						colRefName = dependentObject.Name + colRefName;
+					}
+					else
+					{
+						colRefName = dependentObject.Name;
+					}
+					pn.Name = colRefName;
+					pn.Multiplicity = IsOnlyPrimary(dependentProperty, dependentObject) ? EAMultiplicity.ZeroOrOne : EAMultiplicity.Many;
+					if (pn.Multiplicity == EAMultiplicity.Many)
+					{
+						pn.Name = ToPlural(pn.Name);
+						if (dependentObject.Name == primaryObject.Name)
+						{
+							if(dependentProperty.FieldName.StartsWith("Parent")){
+								pn.Name = ToPlural("Child" + dependentObject.Name);
+							}else{
+								string n = dependentProperty.Name;
+								if(n.ToLower().EndsWith("id")){
+									n = n.Substring(0,n.Length-2);
+								}
+								pn.Name = ToPlural(n + dependentObject.Name);
+							}
+						}
+					}                    
+					primaryObject.NavigationProperties.Add(pn);
 					pn.Parent = primaryObject;
 					pn.Document = this.Container;
-                }
+				}
 
-                if (dn == null) 
-                {
-                    dn = new EANavigationProperty();
-                    dn.Association = item.Name;
-                    dn.Type = primaryObject.Name;
-                    string colRefName = GetReferenceName(dependentProperty.FieldName);
-                    dn.Name = colRefName;
-                    dn.Multiplicity = dependentProperty.IsNullable ? EAMultiplicity.ZeroOrOne : EAMultiplicity.One;
-                    dependentObject.NavigationProperties.Add(dn);
+				if (dn == null) 
+				{
+					dn = new EANavigationProperty();
+					dn.Association = item.Name;
+					dn.Type = primaryObject.Name;
+					string colRefName = GetReferenceName(dependentProperty.FieldName);
+					dn.Name = colRefName;
+					dn.Multiplicity = dependentProperty.IsNullable ? EAMultiplicity.ZeroOrOne : EAMultiplicity.One;
+					dependentObject.NavigationProperties.Add(dn);
 					dn.Parent = dependentObject;
 					dn.Document = this.Container;
-                }
+				}
 
-                if (!exists)
-                {
-                    if (dependentObject.Properties.Any(x => x.Name == dn.Name))
-                    {
-                        dn.Name = dn.Name + "Property";
-                    }
+				if (!exists)
+				{
+					if (dependentObject.Properties.Any(x => x.Name == dn.Name))
+					{
+						dn.Name = dn.Name + "Property";
+					}
 
-                    if (primaryObject.Properties.Any(x => x.Name == pn.Name))
-                    {
-                        pn.Name = pn.Name + "Property";
-                    }
+					if (primaryObject.Properties.Any(x => x.Name == pn.Name))
+					{
+						pn.Name = pn.Name + "Property";
+					}
 
 
-                    //item.PrincipalType = dn.Type;
-                    //item.DependentType = pn.Type;
-                }
+					//item.PrincipalType = dn.Type;
+					//item.DependentType = pn.Type;
+				}
 
-                //if (primaryObject.Name == "ConfigurationItem")
-                //{
-                //    Trace.WriteLine("");
-                //    Debugger.Break();
-                //}
+				//if (primaryObject.Name == "ConfigurationItem")
+				//{
+				//    Trace.WriteLine("");
+				//    Debugger.Break();
+				//}
 
-                dn.ToRole = item.PrincipalRole;
-                pn.ToRole = item.DependentRole;
+				dn.ToRole = item.PrincipalRole;
+				pn.ToRole = item.DependentRole;
 
-                dn.FromRole = item.DependentRole;
-                pn.FromRole = item.PrincipalRole;
-            }
-        }
+				dn.FromRole = item.DependentRole;
+				pn.FromRole = item.PrincipalRole;
+			}
+		}
 
-        private static bool IsOnlyPrimary(EAEntityProperty dependentProperty, EAEntity dependentObject)
-        {
-            if (!dependentProperty.IsPrimary)
-                return false;
+		private static bool IsOnlyPrimary(EAEntityProperty dependentProperty, EAEntity dependentObject)
+		{
+			if (!dependentProperty.IsPrimary)
+				return false;
 
-            if (dependentObject.Properties.Count(x => x.IsPrimary) == 1)
-                return true;
-            return false;
-        }
+			if (dependentObject.Properties.Count(x => x.IsPrimary) == 1)
+				return true;
+			return false;
+		}
 
-        private static void ClearUnusedProperties(EAAssociation item, EAEntity primaryObject)
-        {
-            foreach (var nav in primaryObject.NavigationProperties.Where(
-                    x => x.Association == item.Name && x.FromRole != item.PrincipalRole &&
-                        x.FromRole != item.DependentRole
-                ).ToArray())
-            {
-                primaryObject.NavigationProperties.Remove(nav);
-            }
-        }
+		private static void ClearUnusedProperties(EAAssociation item, EAEntity primaryObject)
+		{
+			foreach (var nav in primaryObject.NavigationProperties.Where(
+					x => x.Association == item.Name && x.FromRole != item.PrincipalRole &&
+						x.FromRole != item.DependentRole
+				).ToArray())
+			{
+				primaryObject.NavigationProperties.Remove(nav);
+			}
+		}
 
-        #region private string GetReferenceName(string p)
-        private string GetReferenceName(string p)
-        {
-            string pl = p.ToLower();
-            if (pl.EndsWith("_id"))
-                return p.Substring(0, p.Length - 3);
-            if (pl.EndsWith("id"))
-                return p.Substring(0, p.Length - 2);
-            return p;
-        }
-        #endregion
+		#region private string GetReferenceName(string p)
+		private string GetReferenceName(string p)
+		{
+			string pl = p.ToLower();
+			if (pl.EndsWith("_id"))
+				return p.Substring(0, p.Length - 3);
+			if (pl.EndsWith("id"))
+				return p.Substring(0, p.Length - 2);
+			return p;
+		}
+		#endregion
 
-        #endregion
+		#endregion
 
-        private static char[] vowels = new char[] { 'a','e','i','o','u' };
+		private static char[] vowels = new char[] { 'a','e','i','o','u' };
 
-        #region private string ToPlural(string p)
-        public static string ToPlural(string p)
-        {
-            if (string.IsNullOrWhiteSpace(p))
-                return p;
+		#region private string ToPlural(string p)
+		public static string ToPlural(string p)
+		{
+			if (string.IsNullOrWhiteSpace(p))
+				return p;
 			return AtomPluralService.ToPlural(p);
-        }
-        #endregion
+		}
+		#endregion
 
 
 
-        #region private void RefreshAssociations()
-        protected virtual void RefreshAssociations()
-        {
-            List<EAAssociation> associtaions = GetAssociations().ToList();
+		#region private void RefreshAssociations()
+		protected virtual void RefreshAssociations()
+		{
+			List<EAAssociation> associtaions = GetAssociations().ToList();
 
-            foreach (var item in Container.Associations.Where(x => !associtaions.Any(y => y.Name == x.Name)).ToArray())
-            {
-                Container.Associations.Remove(item);
+			foreach (var item in Container.Associations.Where(x => !associtaions.Any(y => y.Name == x.Name)).ToArray())
+			{
+				Container.Associations.Remove(item);
 
-                foreach (var obj in Container.Entities)
-                {
-                    foreach (var np in obj.NavigationProperties.Where(x => x.Association == item.Name).ToArray())
-                    {
-                        obj.NavigationProperties.Remove(np);
-                    }
-                }
-            }
-            Container.Associations.Clear();
-            foreach (EAAssociation item in associtaions)
-            {
-                Container.Associations.Add(item);
-            }
-        }
+				foreach (var obj in Container.Entities)
+				{
+					foreach (var np in obj.NavigationProperties.Where(x => x.Association == item.Name).ToArray())
+					{
+						obj.NavigationProperties.Remove(np);
+					}
+				}
+			}
+			Container.Associations.Clear();
+			foreach (EAAssociation item in associtaions)
+			{
+				Container.Associations.Add(item);
+			}
+		}
 
-        protected virtual IEnumerable<EAAssociation> GetAssociations()
-        {
+		protected virtual IEnumerable<EAAssociation> GetAssociations()
+		{
 
-            foreach (var row in Generator.EntityContainer.BaseEntitySets.OfType<AssociationSet>())
-            {
-                string constraintName = row.Name;
-                string deleteAction = null;
-                string updateAction = null;
+			foreach (var row in Generator.EntityContainer.BaseEntitySets.OfType<AssociationSet>())
+			{
+				string constraintName = row.Name;
+				string deleteAction = null;
+				string updateAction = null;
 
 				ReferentialConstraint rc = row.ElementType.ReferentialConstraints[0];
 
 				EdmProperty fromProperty = rc.FromProperties[0];
 				EdmProperty toProperty = rc.ToProperties[0];
 
-                EAAssociation a = new EAAssociation();
-                a.Name = constraintName;
-                a.PrimaryTable = fromProperty.DeclaringType.Name;
-                a.PrimaryColumn = fromProperty.Name;
-                a.DependentTable = toProperty.DeclaringType.Name;
-                a.DependentColumn = toProperty.Name;
-                a.DeleteAction = deleteAction;
-                a.UpdateAction = updateAction;
-                yield return a;
-            }
-        }
-        #endregion
+				EAAssociation a = new EAAssociation();
+				a.Name = constraintName;
+				a.PrimaryTable = fromProperty.DeclaringType.Name;
+				a.PrimaryColumn = fromProperty.Name;
+				a.DependentTable = toProperty.DeclaringType.Name;
+				a.DependentColumn = toProperty.Name;
+				a.DeleteAction = deleteAction;
+				a.UpdateAction = updateAction;
+				yield return a;
+			}
+		}
+		#endregion
 
 
-        #region private void RefreshTables(EAContainer container,DbConnection conn)
-        protected virtual void RefreshTables()
-        {
-            List<EAEntity> tables = GetTables().OrderBy(x=>x.TableName).ToList();
-            foreach (EAEntity table in tables)
-            {
-                EAEntity obj = Container.Entities.FirstOrDefault(x => x.TableName == table.TableName);
-                if (obj == null)
-                {
-                    Container.Entities.Add(table);
-                }
-                else {
-                    obj.Schema = table.Schema;
-                }
+		#region private void RefreshTables(EAContainer container,DbConnection conn)
+		protected virtual void RefreshTables()
+		{
+			List<EAEntity> tables = GetTables().OrderBy(x=>x.TableName).ToList();
+			foreach (EAEntity table in tables)
+			{
+				EAEntity obj = Container.Entities.FirstOrDefault(x => x.TableName == table.TableName);
+				if (obj == null)
+				{
+					Container.Entities.Add(table);
+				}
+				else {
+					obj.Schema = table.Schema;
+				}
 				table.Document = this.Container;
-            }
+			}
 
-            foreach (EAEntity item in
-                Container.Entities.Where(x => !tables.Any(y => y.TableName == x.TableName)).ToArray()
-                )
-            {
-                Container.Entities.Remove(item);
-            }
+			foreach (EAEntity item in
+				Container.Entities.Where(x => !tables.Any(y => y.TableName == x.TableName)).ToArray()
+				)
+			{
+				Container.Entities.Remove(item);
+			}
 
-            foreach (EAEntity table in Container.Entities)
+			foreach (EAEntity table in Container.Entities)
 			{
 				RefreshColumns(table);
 			}
-        }
+		}
 
-        protected virtual IEnumerable<EAEntity> GetTables()
-        {
-            foreach (EntitySet item in Generator.EntityContainer.BaseEntitySets.OfType<EntitySet>())
-            {
-                string tableName = item.Name;
-                if ((!string.IsNullOrEmpty(Container.IgnoreTables)) && Container.IgnoreTables.ToLower().IndexOf(tableName.ToLower()) != -1)
-                    continue;
+		protected virtual IEnumerable<EAEntity> GetTables()
+		{
+			foreach (EntitySet item in Generator.EntityContainer.BaseEntitySets.OfType<EntitySet>())
+			{
+				string tableName = item.Name;
+				if ((!string.IsNullOrEmpty(Container.IgnoreTables)) && Container.IgnoreTables.ToLower().IndexOf(tableName.ToLower()) != -1)
+					continue;
 				MetadataProperty schemaItem = item.MetadataProperties["Schema"];
-                string schema = schemaItem!= null ? (schemaItem.Value as string) : null;
-                if (string.IsNullOrWhiteSpace(schema))
-                    schema = "dbo";
-                string objectName = tableName;
-                if(Container.PluralTableNames)
-                    objectName = ToSingular(tableName);
-                objectName = EscapeName(objectName);
-                yield return new EAEntity { TableName=tableName, Name=objectName, Include=true , Schema=schema };
-            }
-        }
+				string schema = schemaItem!= null ? (schemaItem.Value as string) : null;
+				if (string.IsNullOrWhiteSpace(schema))
+					schema = "dbo";
+				string objectName = tableName;
+				if(Container.PluralTableNames)
+					objectName = ToSingular(tableName);
+				objectName = EscapeName(objectName);
+				yield return new EAEntity { TableName=tableName, Name=objectName, Include=true , Schema=schema };
+			}
+		}
 
-        private string EscapeName(string objectName)
-        {
-            return objectName.Replace(' ', '_');
-        }
+		private string EscapeName(string objectName)
+		{
+			return objectName.Replace(' ', '_');
+		}
 
-        protected virtual void RefreshColumns(EAEntity obj)
-        {
+		protected virtual void RefreshColumns(EAEntity obj)
+		{
 			var cols = GetColumns(obj.TableName);
 
-            foreach (var col in cols)
-            {
+			foreach (var col in cols)
+			{
 
-                EAEntityProperty p = obj.Properties.FirstOrDefault(x => x.FieldName == col.Field.FieldName);
-                if (p == null)
-                {
-                    p = col.Field;
-                    p.Name = col.Field.FieldName;
-                    p.FieldName = col.Field.FieldName;
-                    p.IsActive = true;
-                    obj.Properties.Add(p);
-                }
-                if (string.IsNullOrWhiteSpace(p.Name))
-                    p.Name = p.FieldName;
-                p.Name = EscapeName(p.Name);
-                p.FieldType = col.Field.FieldType;
-                p.IsNullable = col.Field.IsNullable;
-                p.IsIdentity = col.Field.IsIdentity;
-                p.IsPrimary = col.Field.IsPrimary;
-                p.EdmType = col.Field.EdmType;
-                p.IsRequired = !p.IsNullable;
-                p.Length = col.Field.Length;
-                p.Unicode = col.Field.Unicode;
-                p.Precision = col.Field.Precision;
-                p.Scale = col.Field.Scale;
+				EAEntityProperty p = obj.Properties.FirstOrDefault(x => x.FieldName == col.Field.FieldName);
+				if (p == null)
+				{
+					p = col.Field;
+					p.Name = col.Field.FieldName;
+					p.FieldName = col.Field.FieldName;
+					p.IsActive = true;
+					obj.Properties.Add(p);
+				}
+				if (string.IsNullOrWhiteSpace(p.Name))
+					p.Name = p.FieldName;
+				p.Name = EscapeName(p.Name);
+				p.FieldType = col.Field.FieldType;
+				p.IsNullable = col.Field.IsNullable;
+				p.IsIdentity = col.Field.IsIdentity;
+				p.IsPrimary = col.Field.IsPrimary;
+				p.EdmType = col.Field.EdmType;
+				p.IsRequired = !p.IsNullable;
+				p.Length = col.Field.Length;
+				p.Unicode = col.Field.Unicode;
+				p.Precision = col.Field.Precision;
+				p.Scale = col.Field.Scale;
 				p.Parent = obj;
 				p.Document = this.Container;
-            }
+			}
 
 			foreach (EAEntityProperty p1 in obj.Properties.Where(x => !cols.Any(y => y.Field.FieldName == x.FieldName)).ToArray())
 			{
@@ -1215,44 +1215,44 @@
 			}
 		}
 
-        protected virtual IEnumerable<ColumnInfo> GetColumns(string tableName) {
+		protected virtual IEnumerable<ColumnInfo> GetColumns(string tableName) {
 			EntityType type = Generator.EntityContainer.BaseEntitySets.OfType<EntitySet>().First(x => x.Name == tableName).ElementType;
-            foreach (EdmProperty row in type.Properties)
-            {
-                yield return GetColumnInfo(tableName,row);
-            }
-        }
+			foreach (EdmProperty row in type.Properties)
+			{
+				yield return GetColumnInfo(tableName,row);
+			}
+		}
 
-        protected virtual ColumnInfo GetColumnInfo(string tableName,EdmProperty row) {
-            return new ColumnInfo
-            {
-                TableName = tableName,
-                Field = new EAEntityProperty
-                {
-                    FieldName = row.Name,
-                    IsNullable = row.Nullable,
-                    Length = AtomEdmHelper.GetMaxLength(row),
-                    FieldType = row.TypeUsage.EdmType.Name,
+		protected virtual ColumnInfo GetColumnInfo(string tableName,EdmProperty row) {
+			return new ColumnInfo
+			{
+				TableName = tableName,
+				Field = new EAEntityProperty
+				{
+					FieldName = row.Name,
+					IsNullable = row.Nullable,
+					Length = AtomEdmHelper.GetMaxLength(row),
+					FieldType = row.TypeUsage.EdmType.Name,
 					Default = AtomEdmHelper.GetDefault(row),
 					IsPrimary = AtomEdmHelper.IsPrimary(row),
 					IsIdentity = AtomEdmHelper.IsIdentity(row),
-                    EdmType = AtomEdmHelper.GetEdmType(row),
-                    Unicode = AtomEdmHelper.IsUnicode(row),
-                    Precision = AtomEdmHelper.IsPrecision(row),
-                    Scale = AtomEdmHelper.IsScale(row),
+					EdmType = AtomEdmHelper.GetEdmType(row),
+					Unicode = AtomEdmHelper.IsUnicode(row),
+					Precision = AtomEdmHelper.IsPrecision(row),
+					Scale = AtomEdmHelper.IsScale(row),
 					Serialize = AtomEdmHelper.IsPrimary(row)
-                }
-            };
-        }
+				}
+			};
+		}
 
-        public class ColumnInfo {
+		public class ColumnInfo {
 
-            public string TableName { get; set; }
+			public string TableName { get; set; }
 
-            public EAEntityProperty Field { get; set; }
-        }
+			public EAEntityProperty Field { get; set; }
+		}
 
-        #region private void RefreshFieldType(EAEntityProperty p)
+		#region private void RefreshFieldType(EAEntityProperty p)
 		//protected virtual DbType GetFieldType(DataRow row)
 		//{
 		//    string dataType = row[metadataDataType] as string;
@@ -1330,62 +1330,62 @@
 		//    }
 		//    return retVal;
 		//}
-        #endregion
+		#endregion
 
-        #endregion
+		#endregion
 
-        #region private string ToSingular(string tableName)
-        internal static string ToSingular(string tableName)
-        {
+		#region private string ToSingular(string tableName)
+		internal static string ToSingular(string tableName)
+		{
 			return AtomPluralService.ToSingular(tableName);
-        }
-        #endregion
+		}
+		#endregion
 
 
 	}
 
 
  public class TypeHelper
-    {
-        public static string ToStorageType(EAEntityProperty p)
-        {
-            return p.FieldType;
-        }
+	{
+		public static string ToStorageType(EAEntityProperty p)
+		{
+			return p.FieldType;
+		}
 
-        public static string ToConceptualType(EAEntityProperty p)
-        {
-            return p.EdmType.ToString();
-        }
+		public static string ToConceptualType(EAEntityProperty p)
+		{
+			return p.EdmType.ToString();
+		}
 
         public static string ToClrType(EAEntityProperty p)
         {
             string type = _ToClrType(p);
-            if (type == "String" || type == "Byte[]")
+            if (type == "String" || type == "Byte[]" || type == "Data.Entity.Spatial.DbGeography")
                 return type;
             if (p.IsNullable)
                 return type + "?";
             return type;
         }
 
-        public static string ToClrTypeVB(EAEntityProperty p)
-        {
-            string type = _ToClrTypeVB(p);
-            if (type == "String" || type == "Byte()")
-                return type;
-            if (p.IsNullable)
-                return "Nullable(Of " + type + ")";
-            return type;
-        }
+		public static string ToClrTypeVB(EAEntityProperty p)
+		{
+			string type = _ToClrTypeVB(p);
+			if (type == "String" || type == "Byte()")
+				return type;
+			if (p.IsNullable)
+				return "Nullable(Of " + type + ")";
+			return type;
+		}
 
-        public static string ToClrTypeVBPrimitive(EAEntityProperty p)
-        {
-            string type = _ToClrTypeVBPrimitive(p);
-            if (type == "String" || type == "Byte()")
-                return type;
-            if (p.IsNullable)
-                return type + "?";
-            return type;
-        }
+		public static string ToClrTypeVBPrimitive(EAEntityProperty p)
+		{
+			string type = _ToClrTypeVBPrimitive(p);
+			if (type == "String" || type == "Byte()")
+				return type;
+			if (p.IsNullable)
+				return type + "?";
+			return type;
+		}
 
         public static string _ToClrType(EAEntityProperty p)
         {
@@ -1395,33 +1395,35 @@
                     return "Byte[]";
                 case System.Data.Metadata.Edm.PrimitiveTypeKind.Time:
                     return "TimeSpan";
+                case System.Data.Metadata.Edm.PrimitiveTypeKind.Geography:
+                    return "Data.Entity.Spatial.DbGeography";
             }
             return p.EdmType.ToString();
         }
 
-        public static string _ToClrTypeVB(EAEntityProperty p)
-        {
-            switch (p.EdmType)
-            {
-                case System.Data.Metadata.Edm.PrimitiveTypeKind.Binary:
-                    return "Byte()";
-                case System.Data.Metadata.Edm.PrimitiveTypeKind.Time:
-                    return "TimeSpan";
-            }
-            return p.EdmType.ToString();
-        }
+		public static string _ToClrTypeVB(EAEntityProperty p)
+		{
+			switch (p.EdmType)
+			{
+				case System.Data.Metadata.Edm.PrimitiveTypeKind.Binary:
+					return "Byte()";
+				case System.Data.Metadata.Edm.PrimitiveTypeKind.Time:
+					return "TimeSpan";
+			}
+			return p.EdmType.ToString();
+		}
 
-        public static string _ToClrTypeVBPrimitive(EAEntityProperty p)
-        {
-            switch (p.EdmType)
-            {
-                case System.Data.Metadata.Edm.PrimitiveTypeKind.Binary:
-                    return "Byte()";
-                case System.Data.Metadata.Edm.PrimitiveTypeKind.Time:
-                    return "TimeSpan";
-            }
-            return p.EdmType.ToString();
-        }
-    }
+		public static string _ToClrTypeVBPrimitive(EAEntityProperty p)
+		{
+			switch (p.EdmType)
+			{
+				case System.Data.Metadata.Edm.PrimitiveTypeKind.Binary:
+					return "Byte()";
+				case System.Data.Metadata.Edm.PrimitiveTypeKind.Time:
+					return "TimeSpan";
+			}
+			return p.EdmType.ToString();
+		}
+	}
 
 #>
