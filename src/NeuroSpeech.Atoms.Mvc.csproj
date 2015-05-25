@@ -116,6 +116,7 @@
     <Compile Include="Mvc\CachedItem.cs" />
     <Compile Include="Mvc\CachedItemActionResult.cs" />
     <Compile Include="Mvc\CachedRoute.cs" />
+    <Compile Include="Mvc\CompressionFilter.cs" />
     <Compile Include="Mvc\GenericMethods.cs" />
     <Compile Include="Mvc\HtmlResources.cs" />
     <Compile Include="Mvc\JsonErrorResult.cs" />
