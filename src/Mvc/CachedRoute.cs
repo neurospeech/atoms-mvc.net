@@ -13,17 +13,22 @@ namespace NeuroSpeech.Atoms
         private CachedRoute()
         {
             // only one per app..
-
+            Enabled = true;
         }
+
+        public static bool Enabled { get; set; }
+
+        public static string CDNHost { get; set; }
 
         private string Prefix { get; set; }
 
         public static string Version { get; private set; }
 
+        public static string CORSOrigins { get; set; }
+
         private TimeSpan MaxAge { get; set; }
 
-        public static string CORSOrigins { get; set; }
-        //private static CachedRoute Instance;
+        private static CachedRoute Instance;
 
         public static void Register(
             RouteCollection routes,
@@ -38,7 +43,7 @@ namespace NeuroSpeech.Atoms
                 version = System.Web.Configuration.WebConfigurationManager.AppSettings["Static-Content-Version"];
                 if (string.IsNullOrWhiteSpace(version))
                 {
-                    version = Assembly.GetCallingAssembly().GetName().Version.ToString();
+                    version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
                 }
             }
 
@@ -58,14 +63,17 @@ namespace NeuroSpeech.Atoms
             }
         }
 
-        public static string CDNHost { get; set; }
-
         public static HtmlString CachedUrl(string p)
         {
+            //if (!Enabled)
+            //    return new HtmlString(p);
             if (!p.StartsWith("/"))
                 throw new InvalidOperationException("Please provide full path starting with /");
-            string cdnPrefix = string.IsNullOrWhiteSpace(CDNHost) ? "" : ("//" + CDNHost);
-            return new HtmlString(cdnPrefix + "/cached/" + Version + p);
+            if (CDNHost != null)
+            {
+                return new HtmlString("//" + CDNHost + "/cached/" + Version + p);
+            }
+            return new HtmlString("/cached/" + Version + p);
         }
 
         //[Obsolete("Replace with CachedUrl",true)]
@@ -77,22 +85,34 @@ namespace NeuroSpeech.Atoms
         public override async System.Threading.Tasks.Task ProcessRequestAsync(HttpContext context)
         {
             var Response = context.Response;
-            Response.Cache.SetCacheability(HttpCacheability.Public);
-            Response.Cache.SetMaxAge(MaxAge);
-            Response.Cache.SetExpires(DateTime.Now.Add(MaxAge));
-
+            if (Enabled)
+            {
+                Response.Cache.SetCacheability(HttpCacheability.Public);
+                Response.Cache.SetMaxAge(MaxAge);
+                Response.Cache.SetExpires(DateTime.UtcNow.Add(MaxAge));
+            }
+            else
+            {
+                Response.Cache.SetCacheability(HttpCacheability.NoCache);
+                Response.Cache.SetExpires(DateTime.UtcNow.AddDays(-10));
+            }
+            Response.BufferOutput = true;
             if (CORSOrigins != null)
             {
                 Response.Headers.Add("Access-Control-Allow-Origin", CORSOrigins);
             }
-
 
             string FilePath = context.Items["FilePath"] as string;
 
             var file = new FileInfo(context.Server.MapPath("/" + FilePath));
             if (!file.Exists)
             {
-                throw new FileNotFoundException(file.FullName);
+                Response.StatusCode = 404;
+                Response.StatusDescription = "Not Found by CachedRoute";
+                Response.ContentType = "text/plain";
+                Response.Output.Write("File not found by CachedRoute at " + file.FullName);
+                return;
+
             }
 
             Response.ContentType = MimeMapping.GetMimeMapping(file.FullName);
