@@ -129,7 +129,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
 
         private DbContextTransaction CurrentTransaction;
 
-        [Obsolete("Use database transactions directly")]
+        //[Obsolete("Use database transactions directly")]
         public WrappedTransaction CreateTransactionScope() {
             if (CurrentTransaction != null)
                 return new WrappedTransaction(null);
@@ -157,9 +157,9 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
             public void Dispose()
             {
                 if (tx != null) {
-                    if (!isCommitted) {
-                        tx.Rollback();
-                    }
+                    //if (!isCommitted) {
+                    //    tx.Rollback();
+                    //}
                     tx.Dispose();
                 }       
             }
@@ -183,7 +183,7 @@ namespace NeuroSpeech.Atoms.Mvc.Entity
         public async override Task<int> SaveChangesAsync()
         {
             
-            using (var tx = this.Database.BeginTransaction())
+            using (var tx = this.CreateTransactionScope())
             {
                 ChangeSet cs = this.PrepareChanges();
 
