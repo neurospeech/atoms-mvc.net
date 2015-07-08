@@ -144,81 +144,83 @@ namespace NeuroSpeech.Atoms.Mvc
 				return;
 			}
 
-			Type type = model.GetType();
-			foreach (var item in data)
-			{
-				PropertyInfo p = type.GetProperty(item.Key);
-				if (p == null)
-					continue;
-                if (!p.CanWrite)
-                    continue;
-				object val = item.Value;
-				if (val != null)
-				{
-					Type pt = p.PropertyType;
+            DictionaryModelBinder.Bind(model, data);
 
-                    if (pt.IsGenericType)
-                    {
-                        //if (pt.GetGenericTypeDefinition() == typeof(List<>)) {
+            //Type type = model.GetType();
+            //foreach (var item in data)
+            //{
+            //    PropertyInfo p = type.GetProperty(item.Key);
+            //    if (p == null)
+            //        continue;
+            //    if (!p.CanWrite)
+            //        continue;
+            //    object val = item.Value;
+            //    if (val != null)
+            //    {
+            //        Type pt = p.PropertyType;
 
-                        //    object dest = p.GetValue(model, null);
-                        //    if (dest != null) { 
+            //        if (pt.IsGenericType)
+            //        {
+            //            //if (pt.GetGenericTypeDefinition() == typeof(List<>)) {
 
-                        //    }
-                        //    continue;
-                        //}
+            //            //    object dest = p.GetValue(model, null);
+            //            //    if (dest != null) { 
 
-                        if (pt.GetGenericTypeDefinition() == typeof(System.Nullable<>))
-                        {
-                            pt = pt.GetGenericArguments()[0];
-                        }
-                    }
-					if (pt == typeof(DateTime))
-					{
-						string dt = val.ToString();
-						if (dt.StartsWith("/Date"))
-						{
-							val = AtomJavaScriptSerializer.ToDateTime(dt);
-						}
-						else
-						{
-							// parse the UTC time 
-							val = DateTime.Parse(dt);
-						}
-					}
-					if (pt == typeof(Guid))
-					{
-						val = Guid.Parse((string)val);
-					}
-					if (val is IDictionary<string, object>)
-					{
-						var src = p.GetValue(model, null);
-						if (src != null) {
-							LoadModel(src, (Dictionary<string,object>)val);
-						}
-						continue;
-					}
-					else
-					{
-                        try
-                        {
-                            val = Convert.ChangeType(val, pt);
-                        }
-                        catch (Exception ex) {
-                            throw new InvalidOperationException("Failed to load " + type.Name + "." + p.Name + ", conversion failed from " + val + " to " + pt.FullName, ex);
-                        }
-					}
-				}
+            //            //    }
+            //            //    continue;
+            //            //}
 
-				object oldValue = p.GetValue(model, null);
+            //            if (pt.GetGenericTypeDefinition() == typeof(System.Nullable<>))
+            //            {
+            //                pt = pt.GetGenericArguments()[0];
+            //            }
+            //        }
+            //        if (pt == typeof(DateTime))
+            //        {
+            //            string dt = val.ToString();
+            //            if (dt.StartsWith("/Date"))
+            //            {
+            //                val = AtomJavaScriptSerializer.ToDateTime(dt);
+            //            }
+            //            else
+            //            {
+            //                // parse the UTC time 
+            //                val = DateTime.Parse(dt);
+            //            }
+            //        }
+            //        if (pt == typeof(Guid))
+            //        {
+            //            val = Guid.Parse((string)val);
+            //        }
+            //        if (val is IDictionary<string, object>)
+            //        {
+            //            var src = p.GetValue(model, null);
+            //            if (src != null) {
+            //                LoadModel(src, (Dictionary<string,object>)val);
+            //            }
+            //            continue;
+            //        }
+            //        else
+            //        {
+            //            try
+            //            {
+            //                val = Convert.ChangeType(val, pt);
+            //            }
+            //            catch (Exception ex) {
+            //                throw new InvalidOperationException("Failed to load " + type.Name + "." + p.Name + ", conversion failed from " + val + " to " + pt.FullName, ex);
+            //            }
+            //        }
+            //    }
 
-				if (oldValue == val)
-					continue;
-				if (oldValue != null && val != null && val.Equals(oldValue))
-					continue;
+            //    object oldValue = p.GetValue(model, null);
 
-				p.SetValue(model, val, null);
-			}
+            //    if (oldValue == val)
+            //        continue;
+            //    if (oldValue != null && val != null && val.Equals(oldValue))
+            //        continue;
+
+            //    p.SetValue(model, val, null);
+            //}
 		}
 
         /// <summary>

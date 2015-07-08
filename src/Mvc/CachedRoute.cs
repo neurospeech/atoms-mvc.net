@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
 using System.Web;
@@ -63,17 +64,67 @@ namespace NeuroSpeech.Atoms
             }
         }
 
+        public class CachedFileInfo
+        {
+
+            public string Version { get; set; }
+
+            public string FilePath { get; set; }
+
+            public CachedFileInfo(string path)
+            {
+                path = HttpContext.Current.Server.MapPath(path);
+
+                FilePath = path;
+
+                //Watch();
+
+                Update(null, null);
+            }
+
+            private void Watch()
+            {
+                System.IO.FileSystemWatcher fs = new FileSystemWatcher(FilePath);
+                fs.Changed += Update;
+                fs.Deleted += Update;
+                fs.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName;
+            }
+
+            private void Update(object sender, FileSystemEventArgs e)
+            {
+                FileInfo f = new FileInfo(FilePath);
+                if (f.Exists)
+                {
+                    Version = f.LastWriteTimeUtc.ToString("yyyy-MM-dd-hh-mm-ss-FFFF");
+                }
+                else
+                {
+                    Version = "null";
+                }
+            }
+
+
+        }
+
+        private static ConcurrentDictionary<string, CachedFileInfo> CacheItems = new ConcurrentDictionary<string, CachedFileInfo>();
+
         public static HtmlString CachedUrl(string p)
         {
             //if (!Enabled)
             //    return new HtmlString(p);
             if (!p.StartsWith("/"))
                 throw new InvalidOperationException("Please provide full path starting with /");
+
+            string v = Version;
+
+            var cv = CacheItems.GetOrAdd(p, k => new CachedFileInfo(k));
+            v = cv.Version;
+
             if (CDNHost != null)
             {
-                return new HtmlString("//" + CDNHost + "/cached/" + Version + p);
+                return new HtmlString("//" + CDNHost + "/cached/" + v + p);
             }
-            return new HtmlString("/cached/" + Version + p);
+            return new HtmlString("/cached/" + v + p);
         }
 
         //[Obsolete("Replace with CachedUrl",true)]
