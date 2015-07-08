@@ -14,6 +14,7 @@ using System.Diagnostics;
 using NeuroSpeech.Atoms.Entity;
 using System.IO;
 using System.Web.WebPages;
+using NeuroSpeech.Atoms.Mvc.Mvc;
 
 namespace NeuroSpeech.Atoms.Mvc
 {
