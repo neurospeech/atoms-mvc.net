@@ -18,7 +18,7 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
             Type type = model.GetType();
             foreach (var item in values)
             {
-                PropertyInfo p = type.GetProperty(item.Key);
+                PropertyInfo p = type.GetCachedProperty(item.Key);
                 if (p == null)
                     continue;
                 if (!p.CanWrite)
@@ -41,19 +41,10 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
                     }
                     if (val is IDictionary<string, object>)
                     {
-                        var src = p.GetValue(model, null);
-                        if (src == null)
-                        {
-                            var c = p.PropertyType.GetConstructors().FirstOrDefault(x => x.GetParameters() == null || x.GetParameters().Length == 0);
-                            if (c != null)
-                            {
-                                src = c.Invoke(new object[] { });
-                                p.SetValue(model, src);
-                            }
-                        }
+                        var src = p.GetOrCreatePropertyValue(model);
                         if (src != null)
                         {
-                            Bind(src, (Dictionary<string, object>)val);
+                            Bind(src, (IDictionary<string, object>)val);
                         }
                         continue;
                     }
@@ -70,16 +61,7 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
                             objectType = p.PropertyType.GetGenericArguments()[0];
                         }
 
-                        var src = p.GetValue(model, null);
-                        if (src == null)
-                        {
-                            var c = p.PropertyType.GetConstructors().FirstOrDefault(x => x.GetParameters() == null || x.GetParameters().Length == 0);
-                            if (c != null)
-                            {
-                                src = c.Invoke(new object[] { });
-                                p.SetValue(model, src);
-                            }
-                        }
+                        var src = p.GetOrCreatePropertyValue(model);
                         if (src != null)
                         {
                             var iList = src as System.Collections.IList;
@@ -90,7 +72,7 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
                                     //iList.Add(childItem);
                                     var child = Activator.CreateInstance(objectType);
                                     iList.Add(child);
-                                    Bind(child, childItem as Dictionary<string, object>);
+                                    Bind(child, childItem as IDictionary<string, object>);
                                 }
                             }
                         }

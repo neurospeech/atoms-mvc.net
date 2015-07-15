@@ -44,7 +44,7 @@ namespace NeuroSpeech.Atoms.Entity
             statements.Add(Expression.Assign(left, Expression.TypeAs(pLeft, t)));
             statements.Add(Expression.Assign(right, Expression.TypeAs(pRight, t)));
 
-            foreach (var prop in t.GetProperties())
+            foreach (var prop in t.GetCachedProperties())
             {
                 statements.Add(Expression.Assign(Expression.Property(left, prop), Expression.Property(right, prop)));
             }

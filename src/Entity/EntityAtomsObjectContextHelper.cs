@@ -160,7 +160,7 @@ namespace NeuroSpeech.Atoms.Entity
 
                 List<AtomPropertyInfo> list = new List<AtomPropertyInfo>();
 
-                foreach (PropertyInfo p in type.GetProperties())
+                foreach (PropertyInfo p in type.GetCachedProperties())
                 {
                     EntityPropertyAttribute a = p.GetCustomAttribute<EntityPropertyAttribute>();
                     if (a == null)

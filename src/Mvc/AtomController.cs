@@ -73,25 +73,51 @@ namespace NeuroSpeech.Atoms.Mvc
 			}
 		}
 
+
         /// <summary>
         /// 
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="name"></param>
-        /// <param name="optional"></param>
-        /// <param name="defValue"></param>
         /// <returns></returns>
-		public T FormValue<T>(string name, bool optional = false, T defValue = default(T)) {
-			object val = null;
-			if (!FormModel.TryGetValue(name, out val)) { 
-				if(!optional)
-					throw new InvalidOperationException(name + " is required");
-				return defValue;
-			}
-            if (val == null)
-                return defValue;
-			return (T)Convert.ChangeType(val, typeof(T));
-		}
+        public T GetModel<T>()
+            where T : class
+        {
+
+            Type type = typeof(T);
+
+            string key = "_model_:" + type.FullName;
+
+            object m = this.HttpContext.Items[key];
+            if (m != null)
+            {
+                return (T)m;
+            }
+
+            T model = Activator.CreateInstance<T>();
+            LoadModel(model);
+            this.HttpContext.Items[key] = model;
+            return model;
+        }
+
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <typeparam name="T"></typeparam>
+        ///// <param name="name"></param>
+        ///// <param name="optional"></param>
+        ///// <param name="defValue"></param>
+        ///// <returns></returns>
+        //public T FormValue<T>(string name, bool optional = false, T defValue = default(T)) {
+        //    object val = null;
+        //    if (!FormModel.TryGetValue(name, out val)) { 
+        //        if(!optional)
+        //            throw new InvalidOperationException(name + " is required");
+        //        return defValue;
+        //    }
+        //    if (val == null)
+        //        return defValue;
+        //    return (T)Convert.ChangeType(val, typeof(T));
+        //}
 
 
 

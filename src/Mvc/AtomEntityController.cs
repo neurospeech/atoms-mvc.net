@@ -240,10 +240,18 @@ namespace NeuroSpeech.Atoms.Mvc
             return JsonResult(await aq.FirstOrDefaultAsync());
         }
 
+        public class BulkModel
+        {
+
+            public string IDs { get; set; }
+        }
+
         public virtual async Task<ActionResult> BulkDeleteEntity<T>() 
             where T:class
         {
-            string ids = FormValue<string>("ids");
+            BulkModel model = GetModel<BulkModel>();
+
+            string ids = model.IDs;
             if (string.IsNullOrWhiteSpace(ids))
                 return JsonError("Invalid Request");
             string query = "{ '$id:in':[" + ids + "]}";
@@ -355,7 +363,9 @@ namespace NeuroSpeech.Atoms.Mvc
             where T:class
         {
 
-            string ids = FormValue<string>("ids");
+            var model = GetModel<BulkModel>();
+
+            string ids = model.IDs;
 
             string query = "{'$id:in':['" + ids + "']}";
 
@@ -534,7 +544,7 @@ namespace NeuroSpeech.Atoms.Mvc
             {
 
                 Type t = db.GetType();
-                foreach (var item in t.GetProperties())
+                foreach (var item in t.GetCachedProperties())
                 {
                     Type g = item.PropertyType.GetGenericArguments().FirstOrDefault();
                     if (g == null)

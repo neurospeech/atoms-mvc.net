@@ -186,7 +186,7 @@ namespace System.Web.Mvc
 
             private IEnumerable<KeyValuePair<string, object>> GetPropertyValues(Type type, object obj, IEnumerable<string> filter = null)
             {
-                IEnumerable<PropertyInfo> plist = type.GetProperties();
+                IEnumerable<PropertyInfo> plist = type.GetCachedProperties();
                 if (filter != null) {
                     plist = plist.Where(x => filter.Contains(x.Name));
                 }
