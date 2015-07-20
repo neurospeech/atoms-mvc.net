@@ -123,7 +123,7 @@ namespace <#= Container.Namespace #>
 
 		public <#= obj.Name #>(){
 			<# foreach(var item in obj.NavigationProperties.Where(x=> x.Multiplicity == EAMultiplicity.Many)) { #>
-				this.<#= item.Name #> = new List<<#= item.Type #>>();
+				this.<#= item.Name #> = new HashSet<<#= item.Type #>>();
 			<# } #>
 		}
 
@@ -181,7 +181,7 @@ namespace <#= Container.Namespace #>
         [DeleteEntityOnRemove]
 <#                }#>
 
-		public virtual List<<#= item.Type #>> <#= item.Name #>
+		public virtual HashSet<<#= item.Type #>> <#= item.Name #>
 		{
             get;
             set;		
