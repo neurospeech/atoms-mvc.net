@@ -115,6 +115,7 @@
     <Compile Include="Mvc\AtomDictionary.cs" />
     <Compile Include="Mvc\AtomEntityController.cs" />
     <Compile Include="Mvc\AtomJavaScriptSerializer.cs" />
+    <Compile Include="Mvc\AtomQueryableResult.cs" />
     <Compile Include="Mvc\Atoms.cs" />
     <Compile Include="Mvc\CachedItem.cs" />
     <Compile Include="Mvc\CachedItemActionResult.cs" />

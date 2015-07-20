@@ -250,6 +250,14 @@ namespace NeuroSpeech.Atoms.Mvc
             //}
 		}
 
+
+        protected AtomQueryableResult<T> Where<T>(Expression<Func<T, bool>> filter = null)
+            where T : class
+        {
+            Response.Cache.SetCacheability(HttpCacheability.NoCache);
+            return new AtomQueryableResult<T>(Repository.Where<T>(filter), Repository);
+        }
+
         /// <summary>
         /// Turning of Caching for POST by default
         /// </summary>
