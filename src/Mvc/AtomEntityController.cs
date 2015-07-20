@@ -393,7 +393,7 @@ namespace NeuroSpeech.Atoms.Mvc
 
             T item = Activator.CreateInstance<T>();
 
-            var key = type.GetEntityProperties(true).FirstOrDefault();
+            //var key = type.GetEntityProperties(true).FirstOrDefault();
 
             LoadModel(item);
 
