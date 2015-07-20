@@ -9,25 +9,54 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 
-namespace NeuroSpeech.Atoms.Mvc.Mvc
+namespace NeuroSpeech.Atoms.Mvc
 {
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class AtomQueryableResult<T> : ActionResult
             where T : class
     {
+
+        /// <summary>
+        /// 
+        /// </summary>
         public IQueryable<T> Query { get; private set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public long Total { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public BaseSecurityContext SecurityContext { get; private set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public ISecureRepository Repository { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="q"></param>
+        /// <param name="count"></param>
         public AtomQueryableResult(IQueryable<T> q, long count = 0)
         {
             Query = q;
             Total = count;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="q"></param>
+        /// <param name="repository"></param>
+        /// <param name="count"></param>
         public AtomQueryableResult(IQueryable<T> q, ISecureRepository repository, long count = 0)
         {
             Query = q;
@@ -39,18 +68,34 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TX"></typeparam>
+        /// <param name="q"></param>
+        /// <returns></returns>
         public static AtomQueryableResult<TX> From<TX>(IQueryable<TX> q)
             where TX : class
         {
             return new AtomQueryableResult<TX>(q);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> Where(Expression<Func<T, bool>> filter)
         {
             Query = Query.Where(filter);
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> Where(string query)
         {
             if (string.IsNullOrWhiteSpace(query))
@@ -59,6 +104,11 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> WhereKey(object key)
         {
             Type type = typeof(T);
@@ -75,6 +125,12 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TR"></typeparam>
+        /// <param name="filter"></param>
+        /// <returns></returns>
         public AtomQueryableResult<TR> SelectMany<TR>(Expression<Func<T, IEnumerable<TR>>> filter)
             where TR : class
         {
@@ -89,30 +145,60 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
         //    return this;
         //}
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <param name="sort"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> OrderBy<TKey>(Expression<Func<T, TKey>> sort)
         {
             Query = Query.OrderBy(sort);
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <param name="sort"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> OrderByDescending<TKey>(Expression<Func<T, TKey>> sort)
         {
             Query = Query.OrderByDescending(sort);
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <param name="sort"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> ThenBy<TKey>(Expression<Func<T, TKey>> sort)
         {
             Query = ((IOrderedQueryable<T>)Query).ThenBy(sort);
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <param name="sort"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> ThenByDescending<TKey>(Expression<Func<T, TKey>> sort)
         {
             Query = ((IOrderedQueryable<T>)Query).ThenByDescending(sort);
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> Page(int? start, int? count)
         {
             if (start == null || count == null)
@@ -129,6 +215,12 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> Page(int start, int count)
         {
             if (start == 0 && count == -1)
@@ -141,6 +233,12 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="selector"></param>
+        /// <returns></returns>
         public AtomQueryableResult<object> Select<TResult>(Expression<Func<T, TResult>> selector)
             where TResult : class
         {
@@ -154,11 +252,20 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
             return new AtomQueryableResult<object>(Query.Select<T, TResult>(selector), this.Repository, this.Total);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="select"></param>
+        /// <returns></returns>
         public AtomQueryableResult<object> Select(Dictionary<string, string> select)
         {
             return new AtomQueryableResult<object>((IQueryable<object>)Query.SelectDynamic(select), this.Repository, this.Total);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context"></param>
         public override void ExecuteResult(ControllerContext context)
         {
             context.HttpContext.Response.ContentType = "application/json; charset=utf-8";
@@ -176,25 +283,44 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
         }
 
 
-
-        public void Skip(int? start)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        public AtomQueryableResult<T> Skip(int? start)
         {
             if (start != null)
                 Query = Query.Skip(start.Value);
+            return this;
         }
 
-        public void Take(int? size)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
+        public AtomQueryableResult<T> Take(int? size)
         {
             if (size != null)
                 Query = Query.Take(size.Value);
+            return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> Take(int size)
         {
             Query = Query.Take(size);
             return this;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sortBy"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> OrderBy(string sortBy)
         {
             string[] tokens = sortBy.Split();
@@ -227,6 +353,11 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
             return (AtomQueryableResult<T>)method.Invoke(this, new object[] { me, pe, desc, true });
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sortBy"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> ThenBy(string sortBy)
         {
             string[] tokens = sortBy.Split();
@@ -251,6 +382,15 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TX"></typeparam>
+        /// <param name="ex"></param>
+        /// <param name="pe"></param>
+        /// <param name="desc"></param>
+        /// <param name="first"></param>
+        /// <returns></returns>
         public AtomQueryableResult<T> InvokeOrderBy<TX>(Expression ex, ParameterExpression pe, bool desc, bool first)
         {
             Expression<Func<T, TX>> l = Expression.Lambda<Func<T, TX>>(ex, pe);
@@ -269,7 +409,10 @@ namespace NeuroSpeech.Atoms.Mvc.Mvc
         }
 
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public string ToTraceString()
         {
             return ((ObjectQuery)Query).ToTraceString();
