@@ -1,0 +1,40 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Login</title>
+
+    @Html.RenderScript("/scripts/jquery-2.1.4")
+    @Html.RenderScript("/scripts/atoms")
+    @Html.RenderStyle("/style/atoms")
+    @Html.RenderStyle("/style/admin/admin")
+
+
+</head>
+<body>
+    <div atom-type="AtomApplication" atom-render-as-page="{true}"> 
+        <fieldset atom-type="AtomForm"
+                  atom-data="{ {
+                      EmailAddress: '',
+                      Password: '',
+                      RememberMe: false,
+                      ReturnUrl: '/admin/'
+                  } }"
+                  atom-next="{$data.ReturnUrl}">
+            <label>Email:</label>
+            <input type="text" atom-value="$[data.EmailAddress]" />
+            <label>Password:</label>
+            <input type="password" atom-value="$[data.Password]" />
+            <input type="checkbox" atom-checked="$[data.RememberMe]" />
+            <label>Remember</label>
+            <button type="submit">Login</button>
+        </fieldset>
+    </div>
+</body>
+</html>

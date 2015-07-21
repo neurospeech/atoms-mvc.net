@@ -1,0 +1,24 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+
+    @Html.RenderScript("/scripts/jquery-2.1.4")
+    @Html.RenderScript("/scripts/atoms")
+    @Html.RenderStyle("/style/atoms")
+    @Html.RenderStyle("/style/admin/admin")
+
+</head>
+<body>
+    <section atom-type="AtomApplication">
+        @RenderBody()
+    </section>
+</body>
+</html>

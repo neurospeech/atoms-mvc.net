@@ -9,3 +9,5 @@ AtomsFramework/bin/*
 *.nupkg.bak
 *.suo
 AtomsFramework/NuGet.log
+/mvc5/AppFramework/bin
+/mvc5/AppFramework/obj/Debug
