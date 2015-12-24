@@ -146,14 +146,15 @@ namespace System.Web.Mvc
                 IRepositoryObject iro = obj as IRepositoryObject;
                 if (iro != null) {
                     type = iro.ObjectType;
-                    if (SecurityContext != null) {
-                        var security = SecurityContext[type];
-                        propertyValues = GetPropertyValues(type, obj, security.PublicProperties);
-                    }
+                }
+                if (SecurityContext != null)
+                {
+                    var security = SecurityContext[type];
+                    propertyValues = GetPropertyValues(type, obj, security.PublicProperties);
                 }
 
 
-                if (propertyValues == null) {
+            if (propertyValues == null) {
                     propertyValues = GetPropertyValues(type, obj);
                 }
 
