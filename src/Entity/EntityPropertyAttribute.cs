@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NeuroSpeech.Atoms
 {
-    [AttributeUsage(AttributeTargets.Property)]
+    /*[AttributeUsage(AttributeTargets.Property)]
     public class EntityPropertyAttribute : Attribute
     {
 
@@ -22,5 +22,5 @@ namespace NeuroSpeech.Atoms
             IsKey = key;
         }
 
-    }
+    }*/
 }

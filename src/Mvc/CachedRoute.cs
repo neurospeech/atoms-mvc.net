@@ -99,7 +99,7 @@ namespace NeuroSpeech.Atoms
                 }
                 else
                 {
-                    Version = "null";
+                    Version = CachedRoute.Version;
                 }
             }
 

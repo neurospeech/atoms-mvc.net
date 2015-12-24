@@ -162,19 +162,16 @@ namespace NeuroSpeech.Atoms.Entity
 
                 foreach (PropertyInfo p in type.GetCachedProperties())
                 {
-                    EntityPropertyAttribute a = p.GetCustomAttribute<EntityPropertyAttribute>();
+                    KeyAttribute a = p.GetCustomAttribute<KeyAttribute>();
                     if (a == null)
                         continue;
                     if (keyOnly)
                     {
-                        if (a.IsKey)
-                        {
-                            list.Add(new AtomPropertyInfo(type, p, true));
-                        }
+                        list.Add(new AtomPropertyInfo(type, p, true));
                     }
                     else
                     {
-                        list.Add(new AtomPropertyInfo(type, p, a.IsKey));
+                        list.Add(new AtomPropertyInfo(type, p, false));
                     }
 
                 }

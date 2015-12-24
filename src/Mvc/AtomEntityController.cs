@@ -244,6 +244,8 @@ namespace NeuroSpeech.Atoms.Mvc
         {
 
             public string IDs { get; set; }
+
+            public string Query { get; set; }   
         }
 
         public virtual async Task<ActionResult> BulkDeleteEntity<T>() 
@@ -254,7 +256,7 @@ namespace NeuroSpeech.Atoms.Mvc
             string ids = model.IDs;
             if (string.IsNullOrWhiteSpace(ids))
                 return JsonError("Invalid Request");
-            string query = "{ '$id:in':[" + ids + "]}";
+            string query = model.Query ?? "{ '$id:in':[" + ids + "]}";
             var result = await db.Query<T>().WhereJsonQuery(query, db).ToListAsync();
 
             foreach (var e in result) {
@@ -278,8 +280,7 @@ namespace NeuroSpeech.Atoms.Mvc
                 }
             }
 
-            T item = Activator.CreateInstance<T>();
-            LoadModel(item);
+            T item = GetModel<T>();
 
             Type type = typeof(T);
 
@@ -313,8 +314,7 @@ namespace NeuroSpeech.Atoms.Mvc
             }
 
 
-            T item = Activator.CreateInstance<T>();
-            LoadModel(item);
+            T item = GetModel<T>();
 
             var aq = db.Query<T>().WhereJsonQuery(query,db);
             if (string.IsNullOrWhiteSpace(orderBy))
@@ -367,12 +367,12 @@ namespace NeuroSpeech.Atoms.Mvc
 
             string ids = model.IDs;
 
-            string query = "{'$id:in':['" + ids + "']}";
+            string query = model.Query ?? "{'$id:in':['" + ids + "']}";
 
             var list = await db.Query<T>().WhereJsonQuery(query, db).ToListAsync();
             foreach (var item in list)
             {
-                LoadModel(item);
+                TryUpdateModel(item);
             }
             await db.SaveAsync();
             return JsonResult("");
@@ -391,18 +391,15 @@ namespace NeuroSpeech.Atoms.Mvc
 
             Type type = typeof(T);
 
-            T item = Activator.CreateInstance<T>();
+            T item = GetModel<T>();
 
-            //var key = type.GetEntityProperties(true).FirstOrDefault();
-
-            LoadModel(item);
 
             T copy = await db.Query<T>().WhereCopy(item).FirstOrDefaultAsync();
             if (copy != null)
             {
                 // merge...
 
-                LoadModel(copy);
+                TryUpdateModel(copy);
                 item = copy;
 
             }
@@ -651,8 +648,7 @@ namespace NeuroSpeech.Atoms.Mvc
         [HttpPost]
         public async Task<ActionResult> SaveChanges()
         {
-            ChangeSet model = new ChangeSet();
-            LoadModel(model);
+            ChangeSet model = GetModel<ChangeSet>();
 
             List<UpdatedEntity> changes = new List<UpdatedEntity>();
 
@@ -665,7 +661,7 @@ namespace NeuroSpeech.Atoms.Mvc
                 if (id == null)
                 {
                     dbEntity = Activator.CreateInstance(clrType);
-                    LoadModel(dbEntity, entity.changes);
+                    NeuroSpeech.Atoms.Mvc.Mvc.DictionaryModelBinder.Bind(dbEntity, entity.changes);
                     db.AddEntity(dbEntity);
                     changes.Add(new UpdatedEntity { type = entityType, entity = dbEntity });
                 }
@@ -678,7 +674,7 @@ namespace NeuroSpeech.Atoms.Mvc
                         continue;
                     }
                     dbEntity = final;
-                    LoadModel(dbEntity, entity.changes);
+                    NeuroSpeech.Atoms.Mvc.Mvc.DictionaryModelBinder.Bind(dbEntity, entity.changes);
                     changes.Add(new UpdatedEntity { type = entityType, entity = dbEntity });
                 }
 

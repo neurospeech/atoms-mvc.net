@@ -48,30 +48,30 @@ namespace NeuroSpeech.Atoms.Mvc
             requestContext.HttpContext.Items["Repository"] = Repository;
         }
 
-        /// <summary>
-        /// FormModel field passed by client
-        /// </summary>
-		protected Dictionary<string, object> _FormModel = null;
+        //      /// <summary>
+        //      /// FormModel field passed by client
+        //      /// </summary>
+        //protected Dictionary<string, object> _FormModel = null;
 
-        /// <summary>
-        /// Form model
-        /// </summary>
-		protected virtual Dictionary<string, object> FormModel {
-			get {
-				if (_FormModel == null) {
-					string formModel = this.Request.Form["formModel"];
-					if (string.IsNullOrWhiteSpace(formModel))
-                    {
-                        _FormModel = new Dictionary<string, object>();
-                        return _FormModel;
-                    }
-                    JavaScriptSerializer jsr = new JavaScriptSerializer();
-					_FormModel = (Dictionary<string, object>)jsr.Deserialize(formModel, typeof(object));
-                    ParseDates(_FormModel);
-				}
-				return _FormModel;
-			}
-		}
+        //      /// <summary>
+        //      /// Form model
+        //      /// </summary>
+        //protected virtual Dictionary<string, object> FormModel {
+        //	get {
+        //		if (_FormModel == null) {
+        //			string formModel = this.Request.Form["formModel"];
+        //			if (string.IsNullOrWhiteSpace(formModel))
+        //                  {
+        //                      _FormModel = new Dictionary<string, object>();
+        //                      return _FormModel;
+        //                  }
+        //                  JavaScriptSerializer jsr = new JavaScriptSerializer();
+        //			_FormModel = (Dictionary<string, object>)jsr.Deserialize(formModel, typeof(object));
+        //                  ParseDates(_FormModel);
+        //		}
+        //		return _FormModel;
+        //	}
+        //}
 
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace NeuroSpeech.Atoms.Mvc
             }
 
             T model = Activator.CreateInstance<T>();
-            LoadModel(model);
+            TryUpdateModel<T>(model);
             this.HttpContext.Items[key] = model;
             return model;
         }
@@ -122,7 +122,7 @@ namespace NeuroSpeech.Atoms.Mvc
 
 
 
-		private void ParseDates(Dictionary<string, object> data)
+        private void ParseDates(Dictionary<string, object> data)
 		{
 			foreach (var item in data.ToList())
 			{
@@ -145,110 +145,110 @@ namespace NeuroSpeech.Atoms.Mvc
 		}
 
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="model"></param>
-        /// <param name="values"></param>
-        public virtual void LoadModel(object model, AtomDictionary values) {
-            LoadModel(model, values.InternalDictionary);
-        }
+  //      /// <summary>
+  //      /// 
+  //      /// </summary>
+  //      /// <param name="model"></param>
+  //      /// <param name="values"></param>
+  //      public virtual void LoadModel(object model, AtomDictionary values) {
+  //          LoadModel(model, values.InternalDictionary);
+  //      }
 
-        /// <summary>
-        /// Loads model ignoring ScriptIgnore and XmlIgnore Attributes...
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="model"></param>
-        public virtual void LoadModel(object model, Dictionary<string, object> data = null)
-        {
-            if (data == null) {
-                data = FormModel;
-            }
+  //      /// <summary>
+  //      /// Loads model ignoring ScriptIgnore and XmlIgnore Attributes...
+  //      /// </summary>
+  //      /// <typeparam name="T"></typeparam>
+  //      /// <param name="model"></param>
+  //      public virtual void LoadModel(object model, Dictionary<string, object> data = null)
+  //      {
+  //          if (data == null) {
+  //              data = FormModel;
+  //          }
 
-			IJavaScriptDeserializable d = model as IJavaScriptDeserializable;
-			if (d != null) {
-				d.Deserialize(data);
-				return;
-			}
+		//	IJavaScriptDeserializable d = model as IJavaScriptDeserializable;
+		//	if (d != null) {
+		//		d.Deserialize(data);
+		//		return;
+		//	}
 
-            DictionaryModelBinder.Bind(model, data);
+  //          DictionaryModelBinder.Bind(model, data);
 
-            //Type type = model.GetType();
-            //foreach (var item in data)
-            //{
-            //    PropertyInfo p = type.GetProperty(item.Key);
-            //    if (p == null)
-            //        continue;
-            //    if (!p.CanWrite)
-            //        continue;
-            //    object val = item.Value;
-            //    if (val != null)
-            //    {
-            //        Type pt = p.PropertyType;
+  //          //Type type = model.GetType();
+  //          //foreach (var item in data)
+  //          //{
+  //          //    PropertyInfo p = type.GetProperty(item.Key);
+  //          //    if (p == null)
+  //          //        continue;
+  //          //    if (!p.CanWrite)
+  //          //        continue;
+  //          //    object val = item.Value;
+  //          //    if (val != null)
+  //          //    {
+  //          //        Type pt = p.PropertyType;
 
-            //        if (pt.IsGenericType)
-            //        {
-            //            //if (pt.GetGenericTypeDefinition() == typeof(List<>)) {
+  //          //        if (pt.IsGenericType)
+  //          //        {
+  //          //            //if (pt.GetGenericTypeDefinition() == typeof(List<>)) {
 
-            //            //    object dest = p.GetValue(model, null);
-            //            //    if (dest != null) { 
+  //          //            //    object dest = p.GetValue(model, null);
+  //          //            //    if (dest != null) { 
 
-            //            //    }
-            //            //    continue;
-            //            //}
+  //          //            //    }
+  //          //            //    continue;
+  //          //            //}
 
-            //            if (pt.GetGenericTypeDefinition() == typeof(System.Nullable<>))
-            //            {
-            //                pt = pt.GetGenericArguments()[0];
-            //            }
-            //        }
-            //        if (pt == typeof(DateTime))
-            //        {
-            //            string dt = val.ToString();
-            //            if (dt.StartsWith("/Date"))
-            //            {
-            //                val = AtomJavaScriptSerializer.ToDateTime(dt);
-            //            }
-            //            else
-            //            {
-            //                // parse the UTC time 
-            //                val = DateTime.Parse(dt);
-            //            }
-            //        }
-            //        if (pt == typeof(Guid))
-            //        {
-            //            val = Guid.Parse((string)val);
-            //        }
-            //        if (val is IDictionary<string, object>)
-            //        {
-            //            var src = p.GetValue(model, null);
-            //            if (src != null) {
-            //                LoadModel(src, (Dictionary<string,object>)val);
-            //            }
-            //            continue;
-            //        }
-            //        else
-            //        {
-            //            try
-            //            {
-            //                val = Convert.ChangeType(val, pt);
-            //            }
-            //            catch (Exception ex) {
-            //                throw new InvalidOperationException("Failed to load " + type.Name + "." + p.Name + ", conversion failed from " + val + " to " + pt.FullName, ex);
-            //            }
-            //        }
-            //    }
+  //          //            if (pt.GetGenericTypeDefinition() == typeof(System.Nullable<>))
+  //          //            {
+  //          //                pt = pt.GetGenericArguments()[0];
+  //          //            }
+  //          //        }
+  //          //        if (pt == typeof(DateTime))
+  //          //        {
+  //          //            string dt = val.ToString();
+  //          //            if (dt.StartsWith("/Date"))
+  //          //            {
+  //          //                val = AtomJavaScriptSerializer.ToDateTime(dt);
+  //          //            }
+  //          //            else
+  //          //            {
+  //          //                // parse the UTC time 
+  //          //                val = DateTime.Parse(dt);
+  //          //            }
+  //          //        }
+  //          //        if (pt == typeof(Guid))
+  //          //        {
+  //          //            val = Guid.Parse((string)val);
+  //          //        }
+  //          //        if (val is IDictionary<string, object>)
+  //          //        {
+  //          //            var src = p.GetValue(model, null);
+  //          //            if (src != null) {
+  //          //                LoadModel(src, (Dictionary<string,object>)val);
+  //          //            }
+  //          //            continue;
+  //          //        }
+  //          //        else
+  //          //        {
+  //          //            try
+  //          //            {
+  //          //                val = Convert.ChangeType(val, pt);
+  //          //            }
+  //          //            catch (Exception ex) {
+  //          //                throw new InvalidOperationException("Failed to load " + type.Name + "." + p.Name + ", conversion failed from " + val + " to " + pt.FullName, ex);
+  //          //            }
+  //          //        }
+  //          //    }
 
-            //    object oldValue = p.GetValue(model, null);
+  //          //    object oldValue = p.GetValue(model, null);
 
-            //    if (oldValue == val)
-            //        continue;
-            //    if (oldValue != null && val != null && val.Equals(oldValue))
-            //        continue;
+  //          //    if (oldValue == val)
+  //          //        continue;
+  //          //    if (oldValue != null && val != null && val.Equals(oldValue))
+  //          //        continue;
 
-            //    p.SetValue(model, val, null);
-            //}
-		}
+  //          //    p.SetValue(model, val, null);
+  //          //}
+		//}
 
 
         protected AtomQueryableResult<T> Where<T>(Expression<Func<T, bool>> filter = null)
@@ -275,34 +275,34 @@ namespace NeuroSpeech.Atoms.Mvc
 
         }
 
-        /// <summary>
-        /// Enabling dynamic model before executing action
-        /// </summary>
-        /// <param name="filterContext"></param>
-		protected override void OnActionExecuting(ActionExecutingContext filterContext)
-		{
+  //      /// <summary>
+  //      /// Enabling dynamic model before executing action
+  //      /// </summary>
+  //      /// <param name="filterContext"></param>
+		//protected override void OnActionExecuting(ActionExecutingContext filterContext)
+		//{
 
 
-			base.OnActionExecuting(filterContext);
+		//	base.OnActionExecuting(filterContext);
 
-			foreach (KeyValuePair<string,object> item in filterContext.ActionParameters.ToList())
-			{
-				if (item.Value == null)
-					continue;
-				Type itemType = item.Value.GetType();
-				if (itemType == typeof(object))
-				{
-                    IJavaScriptDeserializable d = new AtomDictionary();
-                    d.Deserialize(FormModel);
-                    filterContext.ActionParameters[item.Key] = d;
-					continue;
-				}
-				if (itemType.IsValueType || itemType == typeof(String))
-					continue;
-                LoadModel(item.Value);
-			}
+		//	foreach (KeyValuePair<string,object> item in filterContext.ActionParameters.ToList())
+		//	{
+		//		if (item.Value == null)
+		//			continue;
+		//		Type itemType = item.Value.GetType();
+		//		if (itemType == typeof(object))
+		//		{
+  //                  IJavaScriptDeserializable d = new AtomDictionary();
+  //                  d.Deserialize(FormModel);
+  //                  filterContext.ActionParameters[item.Key] = d;
+		//			continue;
+		//		}
+		//		if (itemType.IsValueType || itemType == typeof(String))
+		//			continue;
+  //              LoadModel(item.Value);
+		//	}
 
-		}
+		//}
 
 
 		#region protected override void  Dispose(bool disposing)
