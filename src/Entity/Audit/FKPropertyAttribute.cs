@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.ModelConfiguration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -15,6 +16,8 @@ namespace NeuroSpeech.Atoms.Entity.Audit
         {
             EntityName = e;
             PropertyName = p;
+
+            
         }
 
         public string EntityName { get; set; }

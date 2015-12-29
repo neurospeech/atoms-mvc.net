@@ -201,11 +201,7 @@ namespace NeuroSpeech.Atoms.Entity
             foreach (var g in cs.UpdatedEntities)
             {
                 object entity = g.Entity;
-                Type type = entity.GetType();
-                IRepositoryObject iro = entity as IRepositoryObject;
-                if (iro != null) {
-                    type = iro.ObjectType;
-                }
+                Type type = entity.GetType().GetEntityType();
                 GenericMethods.InvokeGeneric(this, "VerifySourceEntity", type, db, entity, false);
             }
         }
@@ -250,22 +246,13 @@ namespace NeuroSpeech.Atoms.Entity
             foreach (ChangeSet.ChangeEntry item in cs.UpdatedEntities)
             {
                 var entity = item.Entity;
-                var type = item.Entity.GetType();
-                var iro = entity as IRepositoryObject;
-                if (iro != null) {
-                    type = iro.ObjectType;
-                }
+                var type = item.Entity.GetType().GetEntityType();
                 GenericMethods.InvokeGeneric(this, "VerifyEntityModify", type, entity, item.OriginalValues.Keys.ToList());
             }
             foreach (ChangeSet.ChangeEntry item in cs.Deleted)
             {
                 var entity = item.Entity;
-                var type = item.Entity.GetType();
-                var iro = entity as IRepositoryObject;
-                if (iro != null)
-                {
-                    type = iro.ObjectType;
-                }
+                var type = item.Entity.GetType().GetEntityType();
                 GenericMethods.InvokeGeneric(this, "VerifySourceEntity", type, db, entity, true);
             }
         }

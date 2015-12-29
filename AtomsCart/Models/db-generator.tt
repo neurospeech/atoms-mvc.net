@@ -1,0 +1,114 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using System.Linq;
+using System.Collections.Generic;
+
+<#  
+
+	EFGenerator gen = new EFGenerator("AtomsCart.Model.CartModel"); 
+
+	
+
+
+#>
+
+
+<#+ 
+
+	public class EFBase{
+        public String Name { get; set; }
+	}
+
+	public class EFGenerator : EFBase{
+	
+
+        public String Namespace { get; set; }
+
+        public List<Entity> Entities { get; set; }
+
+		public EFGenerator(string name){
+			var tokens = name.Split('.');
+			Namespace = string.Join(".", tokens.Take(tokens.Length-1));
+			Name = tokens.Last();
+			Entities = new List<Entity>();
+		}
+
+		public Entity NewEntity(string name, string table){
+			Entity entity = new Entity{
+				Name = name,
+				Table = table
+			};
+			Entities.Add(entity);
+			return entity;
+		}
+
+	
+	}
+
+	public class Entity : EFBase{
+        
+        public string Table { get; set; }
+		public List<EntityProperty> Properties {get;set;}
+
+		public Entity Property(string name, string type, string sqlType, bool nullable, int length, string depends){
+			Properties.Add(new EntityProperty{
+				Name = name,
+				Length = length,
+				Depends = depends,
+				Nullable = nullable,
+				Type = type,
+				SqlType = sqlType
+			});
+			return this;
+		}
+
+		public Entity UnicodeString(string name, int length, string depends = null){
+			return Property(name,"String","nvarchar",true,length,depends);
+		}
+		
+		public Entity UnicodeString(string name, string depends = null){
+			return Property(name,"String","nvarchar",true,-1,depends);
+		}
+
+		public Entity Long(string name, string depends = null){
+			return Property(name,"long","bigint",false,-1,depends);
+		}
+		public Entity LongNullable(string name, string depends = null){
+			return Property(name,"long?","bigint",true,-1,depends);
+		}
+		public Entity Int(string name, string depends = null){
+			return Property(name,"int","int",false,-1,depends);
+		}
+		public Entity IntNullable(string name, string depends = null){
+			return Property(name,"int?","int",true,-1,depends);
+		}
+		public Entity DateTime(string name, string depends = null){
+			return Property(name,"DateTime","datetime",false,-1,depends);
+		}
+		public Entity DateTimeNullable(string name, string depends = null){
+			return Property(name,"DateTime?","datetime",true,-1,depends);
+		}
+		public Entity Decimal(string name, string depends = null){
+			return Property(name,"decimal","decimal(18,2)",false,-1,depends);
+		}
+		public Entity DecimalNullable(string name, string depends = null){
+			return Property(name,"decimal?","decimal(18,2)",true,-1,depends);
+		}
+	}
+
+
+	public class EntityProperty : EFBase {
+        public string Type { get; set; }
+        public string SqlType { get; set; }
+        public int Length { get; set; }
+        public string Depends { get; set; }
+        public bool Nullable { get; set; }
+	}
+
+
+ #>

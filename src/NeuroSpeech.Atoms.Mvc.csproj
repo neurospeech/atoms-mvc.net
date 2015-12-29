@@ -109,7 +109,6 @@
     <Compile Include="Entity\EntityPropertyRules.cs" />
     <Compile Include="Entity\ExpressionDictionary.cs" />
     <Compile Include="Entity\FastCloner.cs" />
-    <Compile Include="Entity\IDbContextObject.cs" />
     <Compile Include="Entity\ISecureRepository.cs" />
     <Compile Include="Entity\NavigationExpressionVisitor.cs" />
     <Compile Include="Entity\PropertyRuleDictionary.cs" />

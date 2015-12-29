@@ -139,14 +139,11 @@ namespace System.Web.Mvc
 
                 
 
-                Type type = obj.GetType();
+                Type type = obj.GetType().GetEntityType();
 
                 IEnumerable<KeyValuePair<string,object>> propertyValues = null;
 
-                IRepositoryObject iro = obj as IRepositoryObject;
-                if (iro != null) {
-                    type = iro.ObjectType;
-                }
+                
                 if (SecurityContext != null)
                 {
                     var security = SecurityContext[type];

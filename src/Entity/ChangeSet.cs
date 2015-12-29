@@ -31,11 +31,8 @@ namespace NeuroSpeech.Atoms.Entity
                 Entity = f.Entity;
                 State = f.State;
                 OriginalValues = new Dictionary<string, object>();
-                EntityType = Entity.GetType();
-                IRepositoryObject ro = Entity as IRepositoryObject;
-                if (ro != null) {
-                    EntityType = ro.ObjectType;
-                }
+                EntityType = Entity.GetType().GetEntityType();
+                
                 if (State != EntityState.Modified)
                     return;
                 
@@ -53,12 +50,7 @@ namespace NeuroSpeech.Atoms.Entity
                 Entity = f.Entity;
                 State = f.State;
 
-                EntityType = Entity.GetType();
-                IRepositoryObject ro = Entity as IRepositoryObject;
-                if (ro != null)
-                {
-                    EntityType = ro.ObjectType;
-                }
+                EntityType = Entity.GetType().GetEntityType();
 
                 OriginalValues = new Dictionary<string, object>();
 
@@ -273,12 +265,7 @@ namespace NeuroSpeech.Atoms.Entity
             Values = new List<CFieldValue>();
             Links = new List<CLinkValue>();
 
-            Type type = entity.GetType();
-
-            IRepositoryObject ro = entity as IRepositoryObject;
-            if (ro != null) {
-                type = ro.ObjectType;
-            }
+            Type type = entity.GetType().GetEntityType();
 
             this.State = state;
             this.ObjectName = type.Name;

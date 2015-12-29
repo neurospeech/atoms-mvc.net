@@ -1,0 +1,87 @@
+﻿{
+  "name": "AtomsCart.Model.CartModel",
+  "entities": [
+    {
+      "name": "Account",
+      "table": "Accounts",
+      "properties": [
+        {
+          "name": "AccountID",
+          "type": "long",
+          "primary": true,
+          "identity": true
+        },
+        {
+          "name": "DisplayName",
+          "type": "string",
+          "length": 50
+        },
+        {
+          "name": "ParentID",
+          "type": "long?",
+          "depends": "Account.AccountID"
+        }
+      ]
+    },
+    {
+      "name": "Product",
+      "table": "Products",
+      "properties": [
+        {
+          "name": "ProductID",
+          "type": "long",
+          "primary": true,
+          "identity": true
+        },
+        {
+          "name": "ProductName",
+          "type": "string",
+          "length": 400
+        }
+      ]
+    },
+    {
+      "name": "Order",
+      "table": "Orders",
+      "properties": [
+        {
+          "name": "OrderID",
+          "type": "long",
+          "primary": true,
+          "identity": true
+        },
+        {
+          "name": "RecipientID",
+          "type": "long?",
+          "depends": "Account.AccountID"
+        },
+        {
+          "name": "SenderID",
+          "type": "long?",
+          "depends": "Account.AccountID"
+        },
+        {
+          "name": "DateCreated",
+          "type": "DateTime"
+        }
+      ]
+    },
+    {
+      "name": "OrderItem",
+      "table": "OrderItems",
+      "properties": [
+        {
+          "name": "OrderItemID",
+          "type": "long",
+          "primary": true,
+          "identity": true
+        },
+        {
+          "name": "ProductID",
+          "type": "long",
+          "depends": "Product.ProductID"
+        }
+      ]
+    }
+  ]
+}

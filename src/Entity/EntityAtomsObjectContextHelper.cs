@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Core.Objects.DataClasses;
@@ -148,6 +149,11 @@ namespace NeuroSpeech.Atoms.Entity
 
         private static ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>> _keyList = new ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>>();
         private static ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>> _allList = new ThreadSafeDictionary<Type, IEnumerable<AtomPropertyInfo>>();
+        private static ConcurrentDictionary<Type, Type> _entityTypes = new ConcurrentDictionary<Type, Type>();
+
+        public static Type GetEntityType(this Type type) {
+            return _entityTypes.GetOrAdd(type, t => ObjectContext.GetObjectType(t));
+        }
 
         public static IEnumerable<AtomPropertyInfo> GetEntityProperties(this Type type, bool keyOnly = false)
         {
@@ -164,6 +170,9 @@ namespace NeuroSpeech.Atoms.Entity
                 {
                     KeyAttribute a = p.GetCustomAttribute<KeyAttribute>();
                     if (a == null)
+                        continue;
+                    NotMappedAttribute notMapped = p.GetCustomAttribute<NotMappedAttribute>();
+                    if (notMapped != null)
                         continue;
                     if (keyOnly)
                     {

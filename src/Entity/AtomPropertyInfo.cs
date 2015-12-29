@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Entity;
 using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Core.Objects.DataClasses;
 using System.Linq;
@@ -36,6 +37,7 @@ namespace NeuroSpeech.Atoms.Entity
             }
             FKProperties = list.ToArray();
 
+            
 
             ParameterExpression pe = Expression.Parameter(typeof(object));
             Expression me = Expression.Property(Expression.TypeAs(pe, type), p);

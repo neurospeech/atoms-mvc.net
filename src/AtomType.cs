@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +11,7 @@ namespace NeuroSpeech.Atoms.Mvc
     public static class AtomType
     {
 
-        private static ThreadSafeDictionary<Type, IEnumerable<PropertyInfo>> _properties = new ThreadSafeDictionary<Type, IEnumerable<PropertyInfo>>();
+        private static ConcurrentDictionary<Type, IEnumerable<PropertyInfo>> _properties = new ConcurrentDictionary<Type, IEnumerable<PropertyInfo>>();
 
 
         public static IEnumerable<PropertyInfo> GetCachedProperties(this Type type)

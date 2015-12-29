@@ -617,11 +617,7 @@ namespace NeuroSpeech.Atoms.Mvc
                 var entry = this.FirstOrDefault(x => x.entity == entity);
                 if (entry == null)
                 {
-                    Type type = entity.GetType();
-                    IRepositoryObject ro = entity as IRepositoryObject;
-                    if (ro != null) {
-                        type = ro.ObjectType;
-                    }
+                    Type type = entity.GetType().GetEntityType();
                     entry = new RelatedEntity
                     {
                         entity = entity,
@@ -724,7 +720,7 @@ namespace NeuroSpeech.Atoms.Mvc
             var updatedEntities = await db.SaveAsync();
 
             var nc = updatedEntities.Where(x => !changes.Any(y => y.entity == x)).Select(x => new UpdatedEntity {
-                type = (x is IRepositoryObject) ? ((IRepositoryObject)x).ObjectType.Name : x.GetType().Name,
+                type = x.GetType().GetEntityType().Name,
                 entity = x
             }).ToList();
 
